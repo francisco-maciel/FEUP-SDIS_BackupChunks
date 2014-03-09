@@ -29,10 +29,10 @@ public class ChunksRecord {
 		
 		createDataFolder();
 		
-		File f = new File("data\\" + RECORD_NAME);
+		File f = new File("data" + File.separator + RECORD_NAME);
 		if(f.exists() && !f.isDirectory()) 
 		{ 
-			
+			System.out.println(f.getAbsolutePath());
 			try {
 		      InputStream file = new FileInputStream(f);
 		      InputStream buffer = new BufferedInputStream(file);
@@ -57,8 +57,10 @@ public class ChunksRecord {
 	private void createDataFolder() {
 		
 			File theDir = new File("data");  
-		   if (!theDir.exists()) theDir.mkdir();    
-	
+		   if (!theDir.exists()) theDir.mkdir();  
+		   
+		   File theDir2 = new File("data" + File.separator + "chunks");  
+		   if (!theDir2.exists()) theDir2.mkdir();  
 		
 	}
 
@@ -87,9 +89,10 @@ public class ChunksRecord {
 	public boolean addChunk(String fileId, int chunkNo, byte[] data) {
 		Chunk newC = new Chunk(fileId,chunkNo);
 
-		File f = new File("data\\chunks\\" + newC.getChunkFileName());
+		File f = new File("data"+File.separator+"chunks"+File.separator + newC.getChunkFileName());
 		try {
 			if (!f.createNewFile()) return false;
+			
 			OutputStream file = new FileOutputStream(f);
 			BufferedOutputStream buffer = new BufferedOutputStream(file);
 			
@@ -109,7 +112,7 @@ public class ChunksRecord {
 	
 	private void updateRecordFile() {
 		try {
-			File f = new File("data\\" + RECORD_NAME);
+			File f = new File("data" + File.separator + RECORD_NAME);
 			f.createNewFile();
 			 OutputStream file = new FileOutputStream(f);
 			 OutputStream buffer = new BufferedOutputStream(file);

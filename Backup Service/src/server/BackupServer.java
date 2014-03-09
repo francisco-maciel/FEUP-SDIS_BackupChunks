@@ -1,5 +1,7 @@
 package server;
 
+import java.io.File;
+
 public class BackupServer {
 
 	String mc_address, mdb_address, mdr_address;
@@ -25,9 +27,9 @@ public class BackupServer {
 	//	record.printChunksHeld();
 		
 		
-		ChunkedFile fr = new ChunkedFile("robots.jpg","data\\randomfile.rf");
+		ChunkedFile fr = new ChunkedFile("robots.jpg","data" +File.separator+"randomfile.rf");
 		if (fr.loadFile()) System.out.println(fr);
-		
+		else System.out.println("File not found");
 		
 		for (int i = 0; i < fr.data.size(); i++) {
 			record.addChunk(fr.data.get(i));
