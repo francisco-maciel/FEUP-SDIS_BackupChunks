@@ -1,20 +1,24 @@
 package server.messages;
 
+import server.Version;
 
-public class Stored extends Message {
 
-	public Stored(String fileId, int chunkNo) {
-		super(fileId, chunkNo);
+public class MessageStored extends Message {
+
+	public MessageStored(String fileId, int chunkNo) {
+		this(Version.get(), fileId, chunkNo);
 	}
 
-	public Stored(String version, String fileId, int chunkNo) {
+	public MessageStored(String version, String fileId, int chunkNo) {
 		super(version, fileId, chunkNo);
+		this.type =  MessageType.STORED;
 	}
 
 	@Override
 	public String toMessage() {
 		StringBuilder message = new StringBuilder();
 		message.append(type); message.append(" ");
+		message.append(version); message.append(" ");
 		message.append(fileId); message.append(" ");
 		message.append(chunkNo);
 		message.append("\r\n");

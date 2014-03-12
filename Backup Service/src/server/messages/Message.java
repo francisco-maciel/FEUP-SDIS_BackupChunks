@@ -1,5 +1,14 @@
 package server.messages;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Scanner;
+
+import server.Version;
+
 public abstract class Message {
 	
 	protected MessageType type;
@@ -52,5 +61,48 @@ public abstract class Message {
 	}
 	
 	public abstract String toMessage();
+	
+	public static Message parse(String message) {
+		Message parsed = null;
+		
+		
+		if (parseHead(message, parsed) == null) return null;
+		
+		return parsed;
+		
+	}
+
+	private static Message parseHead(String message, Message parsed) {
+		int lineIndex = 0;
+		
+		//parse header
+		InputStream is = new ByteArrayInputStream(message.getBytes());
+		BufferedReader br = new BufferedReader(new InputStreamReader(is));
+	 
+		String line;
+		try {
+			while ((line = br.readLine()) != null) {
+			if (line.length() == 0) break; // empty line ens header
+			
+			// Traditional recognized line
+			if (lineIndex == 0) {
+				System.out.println(line);;
+				String[] words = line.split(" ");
+				if (words.length < 2) return null;
+				
+				// TODO parsed
+				
+			}
+			// else ignored
+			
+			lineIndex++;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		if (lineIndex < 1) return null;
+		else return parsed;
+	}
 }
 

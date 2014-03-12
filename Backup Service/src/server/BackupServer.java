@@ -2,9 +2,7 @@ package server;
 
 import java.io.File;
 
-import server.messages.Message;
-import server.messages.PutChunk;
-import server.messages.Stored;
+import server.messages.*;
 
 public class BackupServer {
 
@@ -39,8 +37,8 @@ public class BackupServer {
 			DataChunk dc = chunkedFile.getChunk(i);
 			record.addChunk(dc);
 			
-			Message m = new Stored(dc.fileId, dc.chunkNo);
-			
+			Message m = new MessageRemoved(dc.fileId, dc.chunkNo);
+			Message.parse(m.toMessage());
 				
 		}
 		

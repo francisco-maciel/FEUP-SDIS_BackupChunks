@@ -1,16 +1,18 @@
 package server.messages;
 
-public class PutChunk extends Message {
+import server.Version;
+
+public class MessagePutChunk extends Message {
 
 	private byte[] body;
 	private int replicationDeg;
 	
 	
-	public PutChunk(String fileId, int chunkNo, byte[] body, int replicationDeg) {
+	public MessagePutChunk(String fileId, int chunkNo, byte[] body, int replicationDeg) {
 		this(Version.get(),fileId, chunkNo, body, replicationDeg);		
 	}
 
-	public PutChunk(String version, String fileId, int chunkNo, byte[] body,int replicationDeg) {
+	public MessagePutChunk(String version, String fileId, int chunkNo, byte[] body,int replicationDeg) {
 		super(version, fileId, chunkNo);
 		this.type = MessageType.PUTCHUNK;
 		this.body = body;
@@ -21,6 +23,7 @@ public class PutChunk extends Message {
 	public String toMessage() {
 		StringBuilder message = new StringBuilder();
 		message.append(type); message.append(" ");
+		message.append(version); message.append(" ");
 		message.append(fileId); message.append(" ");
 		message.append(chunkNo); message.append(" ");
 		message.append(replicationDeg);
