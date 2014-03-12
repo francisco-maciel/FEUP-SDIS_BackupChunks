@@ -70,6 +70,10 @@ public class ChunkedFile {
 
 		return true;
 	}
+	
+	public DataChunk getChunk(int index) {
+		return data.get(index);
+	}
 
 	private void processChunkName(File f) {
 		
@@ -120,7 +124,6 @@ public class ChunkedFile {
 	
 	public String toString() {
 		return "File: " + fileName + "\nPath: " + path + "\nSize: " + size +  "\nChunks: " + data.size();
-		
 		
 	}
 }

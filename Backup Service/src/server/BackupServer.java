@@ -2,6 +2,10 @@ package server;
 
 import java.io.File;
 
+import server.messages.Message;
+import server.messages.PutChunk;
+import server.messages.Stored;
+
 public class BackupServer {
 
 	String mc_address, mdb_address, mdr_address;
@@ -27,13 +31,17 @@ public class BackupServer {
 	//	record.printChunksHeld();
 		
 		
-		ChunkedFile fr = new ChunkedFile("robots.jpg","data" +File.separator+"randomfile.rf");
-		if (fr.loadFile()) System.out.println(fr);
+		ChunkedFile chunkedFile = new ChunkedFile("robots.jpg","data" +File.separator+"robots.jpg");
+		if (chunkedFile.loadFile()) System.out.println(chunkedFile);
 		else System.out.println("File not found");
 		
-		for (int i = 0; i < fr.data.size(); i++) {
-			record.addChunk(fr.data.get(i));
+		for (int i = 0; i < chunkedFile.data.size(); i++) {
+			DataChunk dc = chunkedFile.getChunk(i);
+			record.addChunk(dc);
 			
+			Message m = new Stored(dc.fileId, dc.chunkNo);
+			
+				
 		}
 		
 
