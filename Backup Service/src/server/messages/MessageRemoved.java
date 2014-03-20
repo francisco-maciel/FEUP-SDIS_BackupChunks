@@ -28,4 +28,10 @@ public class MessageRemoved extends Message {
 		return message.toString();
 	}
 
+	@Override
+	public void setBody(byte[] bytes) {
+		
+		
+	}
+
 }

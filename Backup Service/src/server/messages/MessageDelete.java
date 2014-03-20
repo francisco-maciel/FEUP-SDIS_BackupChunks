@@ -25,4 +25,9 @@ public class MessageDelete extends Message {
 		return message.toString();	
 	}
 
+	@Override
+	public void setBody(byte[] bytes) {
+		
+	}
+
 }

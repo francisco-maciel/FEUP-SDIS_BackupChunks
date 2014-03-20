@@ -35,10 +35,15 @@ public class BackupServer {
 		
 		for (int i = 0; i < chunkedFile.data.size(); i++) {
 			DataChunk dc = chunkedFile.getChunk(i);
+
 			record.addChunk(dc);
 			
 			Message m = new MessageRemoved(dc.fileId, dc.chunkNo);
-			Message.parse(m.toMessage());
+			try {
+				Message.parse(m.toMessage());
+			} catch (UnrecognizedMessageException e) {
+				e.printStackTrace();
+			}
 				
 		}
 		

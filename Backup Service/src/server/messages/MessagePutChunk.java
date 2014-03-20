@@ -35,4 +35,14 @@ public class MessagePutChunk extends Message {
 		return message.toString();
 	}
 
+	@Override
+	public void setBody(byte[] bytes) {
+		body = bytes.clone();
+		
+	}
+
+	public byte[] getBody() {
+		return body;
+	}
+
 }

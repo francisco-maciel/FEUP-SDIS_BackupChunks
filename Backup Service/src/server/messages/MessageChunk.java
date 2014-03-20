@@ -32,4 +32,14 @@ public class MessageChunk extends Message {
 		return message.toString();
 	}
 
+	public byte[] getBody() {
+		return body;
+	}
+
+	@Override
+	public void setBody(byte[] bytes) {
+		body = bytes.clone();
+		
+	}
+
 }

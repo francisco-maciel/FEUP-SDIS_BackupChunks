@@ -28,4 +28,9 @@ public class MessageGetChunk extends Message {
 		return message.toString();
 	}
 
+	@Override
+	public void setBody(byte[] bytes) {
+		
+	}
+
 }

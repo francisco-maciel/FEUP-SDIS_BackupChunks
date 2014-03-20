@@ -12,6 +12,7 @@ import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
 
+
 public class ChunkedFile {
 
 	String path;
@@ -99,7 +100,8 @@ public class ChunkedFile {
 		 MessageDigest digester;
 		    try {
 		    	digester = MessageDigest.getInstance("SHA-256");
-		    	 cryptName =  byteArrayToHexString(digester.digest(preCryptName.getBytes()));
+		    	cryptName =  byteArrayToHexString(digester.digest(preCryptName.getBytes()));
+		    
 		    }
 		    catch(NoSuchAlgorithmException e) {
 		    	cryptName = preCryptName;
