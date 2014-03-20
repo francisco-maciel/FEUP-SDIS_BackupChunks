@@ -3,6 +3,7 @@ package server;
 import java.io.File;
 
 import server.messages.*;
+import ui.BackupListener;
 
 public class BackupServer {
 
@@ -10,6 +11,7 @@ public class BackupServer {
 	int mc_port, mdb_port, mdr_port;
 	
 	ChunksRecord record;
+	private BackupListener listener;
 	
 	public BackupServer(String mc_address, int mc_port, String mdb_address,
 			int mdb_port, String mdr_address, int mdr_port) {
@@ -21,33 +23,47 @@ public class BackupServer {
 		this.mdb_port = mdb_port;
 		this.mdr_port = mdr_port;
 		this.record = ChunksRecord.getChunksRecord();
+		listener = null;
 
 	}
 
 	public void start() {
 		
-	//	record.printChunksHeld();
+		record.printChunksHeld();
+		if (listener != null) listener.updateChunks(record.getChunks());
+
+	}
+	
+	public boolean backupFile(File file) {
 		
-		
-		ChunkedFile chunkedFile = new ChunkedFile("robots.jpg","data" +File.separator+"robots.jpg");
-		if (chunkedFile.loadFile()) System.out.println(chunkedFile);
+		ChunkedFile chunkedFile = new ChunkedFile();
+		if (chunkedFile.loadFile(file)) System.out.println(chunkedFile);
 		else System.out.println("File not found");
 		
 		for (int i = 0; i < chunkedFile.data.size(); i++) {
 			DataChunk dc = chunkedFile.getChunk(i);
 
-			record.addChunk(dc);
-			
-			Message m = new MessageRemoved(dc.fileId, dc.chunkNo);
-			try {
-				Message.parse(m.toMessage());
-			} catch (UnrecognizedMessageException e) {
-				e.printStackTrace();
-			}
-				
+			record.addChunk(dc);	
 		}
+		if (listener != null) listener.updateChunks(record.getChunks());
 		
+		return true;
 
+	}
+
+	public ChunksRecord getRecord() {
+		return record;
+		
+	}
+
+	public void setListener(BackupListener listener) {
+		this.listener = listener;
+		
+	}
+
+	public void deleteData() {
+		record.deleteData();
+		if (listener != null) listener.updateChunks(record.getChunks());
 		
 	}
 

@@ -12,6 +12,8 @@ import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
 
+import org.junit.internal.ArrayComparisonFailure;
+
 
 public class ChunkedFile {
 
@@ -23,6 +25,15 @@ public class ChunkedFile {
 	int size;
 	public static final int CHUNK_SIZE = 64 * 1024;
 	
+	
+	public ChunkedFile() {
+		this.path = "";
+		this.data = new Vector<DataChunk>();
+		this.fileName = "";
+		size = 0;
+		preCryptName = "";
+	}
+	
 	public ChunkedFile(String filename, String path) {
 		this.path = path;
 		this.data = new Vector<DataChunk>();
@@ -33,8 +44,18 @@ public class ChunkedFile {
 	
 	public boolean loadFile() {
 		File f = new File(path);
-
+		
+		return loadFile(f);
+		
+	}
+	
+	
+	
+	public boolean loadFile(File f) {
+		
 		if (!f.exists()) return false;
+		fileName = f.getName();
+		path = f.getAbsolutePath();
 		
 		processChunkName(f);
 		
@@ -55,12 +76,16 @@ public class ChunkedFile {
 				if ((next = buffer.read(buf, 0, CHUNK_SIZE)) == -1)  break;
 
 				size += next;
-				data.add(new DataChunk(cryptName,i,buf));
+				
+				byte[] buf2 = new byte[next];
+				buf2 = buf.clone();
+				
+				data.add(new DataChunk(cryptName,i,buf2, next));
 				i++;
 				
 			}
 			if (oldnext == CHUNK_SIZE) {
-				data.add(new DataChunk(cryptName,i,new byte[0]));
+				data.add(new DataChunk(cryptName,i,new byte[0], 0));
 			}
 			
 			buffer.close();

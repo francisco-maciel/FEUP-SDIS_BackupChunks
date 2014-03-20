@@ -1,5 +1,6 @@
 package ui;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -19,6 +20,12 @@ public class BasicInterface {
 	
 	public static void main(String args[])
 	{
+		BackupServer bck = initServerWithArguments(args);
+		bck.start();
+		bck.backupFile(new File("./data/randomfile.rf"));
+	}
+
+	static BackupServer initServerWithArguments(String[] args) {
 		String mc_address, mdb_address, mdr_address;
 		int mc_port, mdb_port, mdr_port;
 		
@@ -43,7 +50,7 @@ public class BasicInterface {
 		}
 		
 		BackupServer bck = new BackupServer(mc_address,mc_port, mdb_address,mdb_port, mdr_address,mdr_port);
-		bck.start();
+		return bck;
 	}
 	
 	public static boolean checkArguments(String[] args) {

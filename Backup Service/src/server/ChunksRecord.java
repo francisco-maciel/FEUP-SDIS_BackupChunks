@@ -32,7 +32,6 @@ public class ChunksRecord {
 		File f = new File("data" + File.separator + RECORD_NAME);
 		if(f.exists() && !f.isDirectory()) 
 		{ 
-			System.out.println(f.getAbsolutePath());
 			try {
 		      InputStream file = new FileInputStream(f);
 		      InputStream buffer = new BufferedInputStream(file);
@@ -58,7 +57,6 @@ public class ChunksRecord {
 		
 			File theDir = new File("data");  
 		   if (!theDir.exists()) theDir.mkdir();  
-		   
 		   File theDir2 = new File("data" + File.separator + "chunks");  
 		   if (!theDir2.exists()) theDir2.mkdir();  
 		
@@ -84,9 +82,9 @@ public class ChunksRecord {
 			}	
 	}
 	public boolean addChunk(DataChunk dc ) {	
-		return addChunk(dc.fileId,dc.chunkNo, dc.getData());
+		return addChunk(dc.fileId,dc.chunkNo, dc.getData(), dc.getSize());
 	}
-	public boolean addChunk(String fileId, int chunkNo, byte[] data) {
+	public boolean addChunk(String fileId, int chunkNo, byte[] data, int size) {
 		Chunk newC = new Chunk(fileId,chunkNo);
 
 		File f = new File("data"+File.separator+"chunks"+File.separator + newC.getChunkFileName());
@@ -96,7 +94,7 @@ public class ChunksRecord {
 			OutputStream file = new FileOutputStream(f);
 			BufferedOutputStream buffer = new BufferedOutputStream(file);
 			
-			buffer.write(data);
+			buffer.write(data,0, size);
 			buffer.close();
 			
 			
@@ -108,6 +106,33 @@ public class ChunksRecord {
 		
 		updateRecordFile();
 		return true;
+	}
+	
+	
+	public void deleteData() {
+		deleteDirectory(new File("data" + File.separator + "chunks"));
+		createDataFolder();
+		chunks.removeAllElements();
+		updateRecordFile();
+	}
+	
+	
+	public static boolean deleteDirectory(File directory) {
+		// Codigo retirado de http://stackoverflow.com/questions/3775694/deleting-folder-from-java
+	    if(directory.exists()){
+	        File[] files = directory.listFiles();
+	        if(null!=files){
+	            for(int i=0; i<files.length; i++) {
+	                if(files[i].isDirectory()) {
+	                    deleteDirectory(files[i]);
+	                }
+	                else {
+	                    files[i].delete();
+	                }
+	            }
+	        }
+	    }
+	    return(directory.delete());
 	}
 	
 	private void updateRecordFile() {
@@ -124,5 +149,9 @@ public class ChunksRecord {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public Vector<Chunk> getChunks() {
+		return chunks;
 	}
 }

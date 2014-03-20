@@ -3,39 +3,47 @@ package ui;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
-import java.awt.TextArea;
-
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JScrollBar;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import java.awt.ScrollPane;
-import java.awt.Panel;
-import java.awt.BorderLayout;
 import java.awt.Component;
+
 import javax.swing.JLabel;
 import javax.swing.JTree;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.LineBorder;
+
 import java.awt.Color;
 import java.awt.Font;
+
 import javax.swing.JButton;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class VisualInterface {
+import server.BackedFile;
+import server.BackupServer;
+import server.Chunk;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.util.Vector;
+
+public class VisualInterface implements BackupListener {
 
 	private JFrame frmBackupService;
-	private JTextArea mc_textField;
-	private JTextArea mdb_textField;
-	private JTextArea mdr_textField;
+	private BackupServer server;
+	private DefaultMutableTreeNode filesHeld;
+	DefaultMutableTreeNode chunksHeld;
+	JTree tree;
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				  try {
@@ -50,6 +58,10 @@ public class VisualInterface {
 				  
 				try {
 					VisualInterface window = new VisualInterface();
+					window.server =  BasicInterface.initServerWithArguments(args);
+					window.server.setListener(window);
+					window.server.start();
+					
 					window.frmBackupService.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -70,90 +82,41 @@ public class VisualInterface {
 	 */
 	private void initialize() {
 		frmBackupService = new JFrame();
+		frmBackupService.setIconImage(((ImageIcon)UIManager.getIcon("FileView.hardDriveIcon")).getImage());
+		frmBackupService.setResizable(false);
 		frmBackupService.setTitle("Backup Service");
-		frmBackupService.setBounds(100, 100, 829, 647);
+		frmBackupService.setBounds(100, 100, 763, 432);
 		frmBackupService.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		 frmBackupService.getContentPane().setLayout(null);
-		
-		
-		  mc_textField = new JTextArea();
-		  mc_textField.setEditable(false);
-		  mc_textField.setLineWrap(true);
-
-
-        JScrollPane scroll = new JScrollPane(mc_textField);
-        scroll.setEnabled(false);
-        scroll.setHorizontalScrollBarPolicy ( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
-        scroll.setVerticalScrollBarPolicy ( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
-        scroll.setBounds(219, 58, 584, 132);                
-	    frmBackupService.getContentPane().add(scroll);
+		frmBackupService.getContentPane().setLayout(null);
 	        
-	    mdb_textField = new JTextArea();
-	    mdb_textField.setEditable(false);
-	    mdb_textField.setLineWrap(true);
-
-
-        JScrollPane scroll_2 = new JScrollPane(mdb_textField);
-        scroll_2.setEnabled(false);
-        scroll_2.setHorizontalScrollBarPolicy ( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
-
-        scroll_2.setVerticalScrollBarPolicy ( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
-        scroll_2.setBounds(219, 220, 584, 123);                     // <-- THIS
-
-        frmBackupService.getContentPane().add(scroll_2);
-		        
-        mdr_textField = new JTextArea();
-        mdr_textField.setEditable(false);
-        mdr_textField.setLineWrap(true);
-
-
-        JScrollPane scroll_3 = new JScrollPane(mdr_textField);
-        scroll_3.setEnabled(false);
-        scroll_3.setHorizontalScrollBarPolicy ( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
-
-        scroll_3.setVerticalScrollBarPolicy ( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
-        scroll_3.setBounds(219, 370, 584, 148);                     // <-- THIS
-
-	        frmBackupService.getContentPane().add(scroll_3);
-	        
-	        JLabel lblNewLabel = new JLabel("Multicast Control Channel");
-	        lblNewLabel.setBounds(221, 33, 150, 14);
-	        frmBackupService.getContentPane().add(lblNewLabel);
-	        
-	        JLabel lblFsd = new JLabel("Multicast Backup Channel");
-	        lblFsd.setBounds(221, 201, 150, 14);
-	        frmBackupService.getContentPane().add(lblFsd);
-	        
-	        JLabel lblMulticastRestoreChannel = new JLabel("Multicast Restore Channel");
-	        lblMulticastRestoreChannel.setBounds(219, 354, 188, 14);
-	        frmBackupService.getContentPane().add(lblMulticastRestoreChannel);
-	        
-	        JTree tree = new JTree();
+	         tree = new JTree();
 	
+	        tree.setCellRenderer(new MyTreeCellRenderer());
 	        tree.setModel(new DefaultTreeModel(
 	        	new DefaultMutableTreeNode("Backup") {
-	        		{
-	        			DefaultMutableTreeNode node_1;
-	        			node_1 = new DefaultMutableTreeNode("Chunks");
-	        				node_1.add(new DefaultMutableTreeNode("chunk1"));
-	        				node_1.add(new DefaultMutableTreeNode("chunk2"));
-	        				node_1.add(new DefaultMutableTreeNode("chunk3"));
-	        				node_1.add(new DefaultMutableTreeNode("chunk4"));
-	        			add(node_1);
-	        			node_1 = new DefaultMutableTreeNode("Files");
-	        				node_1.add(new DefaultMutableTreeNode("a.txt"));
-	        				node_1.add(new DefaultMutableTreeNode("b.doc"));
-	        				node_1.add(new DefaultMutableTreeNode("c.jpg"));
-	        			add(node_1);
+					private static final long serialVersionUID = -702610992789751703L;
+
+					{
 	        			
+	        			chunksHeld = new DefaultMutableTreeNode("Chunks");
+	        			add(chunksHeld);
+	        			filesHeld = new DefaultMutableTreeNode("Files",true);
+	        			
+	        			add(filesHeld);
 	        		}
 	        	}
 	        ));
 	        tree.setRootVisible(false);
 	        tree.setBorder(new CompoundBorder(new LineBorder(new Color(0, 0, 0)), null));
 	        tree.setShowsRootHandles(true);
-	        tree.setBounds(10, 63, 186, 280);
-	        frmBackupService.getContentPane().add(tree);
+	        tree.setBounds(10, 77, 705, 243);
+	        
+	        JScrollPane qPane = new JScrollPane(tree,
+	        	      JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+	        	      JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+	        qPane.setBorder(new CompoundBorder(new LineBorder(new Color(0, 0, 0)), null));
+	        qPane.setBounds(10, 77, 705, 243);
+	        frmBackupService.getContentPane().add(qPane);
 	        
 	        JLabel lblBackupService = new JLabel("Backup Service");
 	        lblBackupService.setFont(new Font("Tahoma", Font.BOLD, 17));
@@ -161,13 +124,85 @@ public class VisualInterface {
 	        frmBackupService.getContentPane().add(lblBackupService);
 	        
 	        JButton btnNewButton = new JButton("Add file");
-	        btnNewButton.setBounds(10, 350, 89, 23);
+	        btnNewButton.addActionListener(new ActionListener() {
+	        	public void actionPerformed(ActionEvent arg0) {
+	        		final JFileChooser fc = new JFileChooser();
+	        		int returnVal = fc.showOpenDialog(frmBackupService);
+	        		if (returnVal == JFileChooser.APPROVE_OPTION) {
+	                    File file = fc.getSelectedFile();
+	                    
+	                   server.backupFile(file);
+	                    
+	        	}
+	        	}
+	        });
+	        btnNewButton.setBounds(10, 331, 89, 23);
 	        frmBackupService.getContentPane().add(btnNewButton);
 	        
 	        JButton btnRestore = new JButton("Restore");
 	        btnRestore.setEnabled(false);
-	        btnRestore.setBounds(107, 350, 89, 23);
+	        btnRestore.setBounds(102, 331, 89, 23);
 	        frmBackupService.getContentPane().add(btnRestore);
+	        
+	        JButton btnDeleteAllChunks = new JButton("Delete All Chunks");
+	        btnDeleteAllChunks.addActionListener(new ActionListener() {
+	        	public void actionPerformed(ActionEvent arg0) {
+	        		server.deleteData();
+	        	}
+	        });
+	        btnDeleteAllChunks.setBounds(591, 331, 124, 23);
+	        frmBackupService.getContentPane().add(btnDeleteAllChunks);
 	        frmBackupService.setLocationRelativeTo(null);
+	}
+	
+	
+	private static class MyTreeCellRenderer extends DefaultTreeCellRenderer {
+
+        @Override
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+            super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+
+            // decide what icons you want by examining the node
+            if (value instanceof DefaultMutableTreeNode) {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+                if (node.getUserObject() instanceof String) {
+                    // your root node, since you just put a String as a user obj                    
+                   if (node.getUserObject().equals("Chunks")) setIcon(UIManager.getIcon("FileView.hardDriveIcon"));
+                  
+                   if (node.getUserObject().equals("Files")) setIcon(UIManager.getIcon("FileView.directoryIcon"));
+                   
+                  if (node.getParent() != null) {
+                	  if (((DefaultMutableTreeNode) node.getParent()).getUserObject().equals("Chunks")) setIcon(UIManager.getIcon("FileView.floppyDriveIcon"));
+                	  if (((DefaultMutableTreeNode) node.getParent()).getUserObject().equals("Files")) setIcon(UIManager.getIcon("FileView.fileIcon"));
+                      
+                  }
+
+                } 
+                
+            }
+
+            return this;
+        }
+
+    }
+
+
+	@Override
+	public void updateChunks(Vector<Chunk> chunks) {
+		chunksHeld.removeAllChildren();
+
+			for (int i = 0; i < chunks.size(); i++) {
+				chunksHeld.add(new DefaultMutableTreeNode(chunks.get(i).getName()));
+			}
+			
+			DefaultTreeModel model = (DefaultTreeModel)tree.getModel();
+			DefaultMutableTreeNode root = (DefaultMutableTreeNode)model.getRoot();
+			model.reload(root);
+	}
+
+	@Override
+	public void updateFiles(Vector<BackedFile> chunks) {
+		// TODO Auto-generated method stub
+		
 	}
 }
