@@ -16,18 +16,19 @@ public class MessageDelete extends Message {
 	@Override
 	public String toMessage() {
 		StringBuilder message = new StringBuilder();
-		message.append(type); message.append(" ");
-		message.append(fileId); 
+		message.append(type);
+		message.append(" ");
+		message.append(fileId);
 		message.append("\r\n");
 		// second line could go here
 		message.append("\r\n");
-		
-		return message.toString();	
+
+		return message.toString();
 	}
 
 	@Override
 	public void setBody(byte[] bytes) {
-		
+
 	}
 
 }

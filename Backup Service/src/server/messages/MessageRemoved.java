@@ -16,22 +16,23 @@ public class MessageRemoved extends Message {
 
 	@Override
 	public String toMessage() {
-		
+
 		StringBuilder message = new StringBuilder();
-		message.append(type); message.append(" ");
-		message.append(fileId); message.append(" ");
+		message.append(type);
+		message.append(" ");
+		message.append(fileId);
+		message.append(" ");
 		message.append(chunkNo);
 		message.append("\r\n");
 		// second line could go here
 		message.append("\r\n");
-		
+
 		return message.toString();
 	}
 
 	@Override
 	public void setBody(byte[] bytes) {
-		
-		
+
 	}
 
 }
