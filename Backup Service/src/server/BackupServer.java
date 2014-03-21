@@ -31,29 +31,38 @@ public class BackupServer {
 	public void start() {
 
 		record.printChunksHeld();
-		if (listener != null)
-			listener.updateChunks(record.getChunks());
+		files.printFilesHeld();
+		updateVisuals();
 
 	}
 
-	public boolean backupFile(File file) {
+	public boolean backupFile(File file, int degree) {
 
 		ChunkedFile chunkedFile = new ChunkedFile();
 		if (chunkedFile.loadFile(file))
 			System.out.println(chunkedFile);
 		else
-			System.out.println("File not found");
+			return false;
 
 		for (int i = 0; i < chunkedFile.data.size(); i++) {
 			DataChunk dc = chunkedFile.getChunk(i);
 
 			record.addChunk(dc);
 		}
-		if (listener != null)
-			listener.updateChunks(record.getChunks());
+
+		files.addFile(new FileInfo(chunkedFile.fileName, chunkedFile.path,
+				chunkedFile.size, 0, degree));
+		updateVisuals();
 
 		return true;
 
+	}
+
+	private void updateVisuals() {
+		if (listener != null)
+			listener.updateChunks(record.getChunks());
+		if (listener != null)
+			listener.updateFiles(files.getFiles());
 	}
 
 	public ChunksRecord getRecord() {
@@ -71,6 +80,10 @@ public class BackupServer {
 		if (listener != null)
 			listener.updateChunks(record.getChunks());
 
+	}
+
+	public FilesRecord getFilesRecord() {
+		return files;
 	}
 
 }

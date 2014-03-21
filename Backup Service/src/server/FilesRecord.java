@@ -83,7 +83,19 @@ public class FilesRecord {
 		FileInfo newFile = new FileInfo(fileName, path, size,
 				replicationDegree, desiredDegree);
 
-		files.add(newFile);
+		boolean found = false;
+
+		for (FileInfo f : files) {
+			if (f.getName().equals(newFile.getName())) {
+				found = true;
+				f.setDesiredDegree(desiredDegree);
+				f.setReplicationDegree(replicationDegree);
+				f.setPath(path);
+				f.setSize(size);
+			}
+		}
+		if (!found)
+			files.add(newFile);
 
 		updateRecordFile();
 		return true;
@@ -106,5 +118,13 @@ public class FilesRecord {
 
 	public Vector<FileInfo> getFiles() {
 		return files;
+	}
+
+	public FileInfo getFileInfo(String selectedNode) {
+		for (FileInfo f : files) {
+			if (f.getName().equals(selectedNode))
+				return f;
+		}
+		return null;
 	}
 }

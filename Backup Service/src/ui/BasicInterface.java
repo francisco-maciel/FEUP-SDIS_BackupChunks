@@ -19,7 +19,7 @@ public class BasicInterface {
 	public static void main(String args[]) {
 		BackupServer bck = initServerWithArguments(args);
 		bck.start();
-		bck.backupFile(new File("./data/randomfile.rf"));
+		bck.backupFile(new File("./data/randomfile.rf"), 0);
 	}
 
 	static BackupServer initServerWithArguments(String[] args) {

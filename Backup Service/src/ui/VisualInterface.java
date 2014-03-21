@@ -1,45 +1,61 @@
 package ui;
 
-import java.awt.EventQueue;
-
-import javax.swing.JFrame;
-import javax.swing.ImageIcon;
-import javax.swing.JFileChooser;
-import javax.swing.JScrollPane;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-
-import java.awt.Component;
-
-import javax.swing.JLabel;
-import javax.swing.JTree;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.LineBorder;
-
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.EventQueue;
 import java.awt.Font;
-
-import javax.swing.JButton;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.DefaultMutableTreeNode;
-
-import server.FileInfo;
-import server.BackupServer;
-import server.Chunk;
-
-import java.awt.event.ActionListener;
+import java.awt.Panel;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.File;
 import java.util.Vector;
 
-public class VisualInterface implements BackupListener {
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
+import javax.swing.JTree;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeSelectionModel;
+
+import server.BackupServer;
+import server.Chunk;
+import server.FileInfo;
+import server.FilesRecord;
+
+public class VisualInterface implements BackupListener, TreeSelectionListener {
 
 	private JFrame frmBackupService;
 	private BackupServer server;
 	private DefaultMutableTreeNode filesHeld;
 	DefaultMutableTreeNode chunksHeld;
 	JTree tree;
+	String selectedNode;
+	private JTextField nameField;
+	private JTextField pathField;
+	private JTextField sizeField;
+	private JTextField replicationField;
+	private JTextField desiredField;
+	JButton restoreButton;
+	private JTextField degreeField;
 
 	/**
 	 * Launch the application.
@@ -82,12 +98,13 @@ public class VisualInterface implements BackupListener {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		selectedNode = null;
 		frmBackupService = new JFrame();
 		frmBackupService.setIconImage(((ImageIcon) UIManager
 				.getIcon("FileView.hardDriveIcon")).getImage());
 		frmBackupService.setResizable(false);
 		frmBackupService.setTitle("Backup Service");
-		frmBackupService.setBounds(100, 100, 763, 432);
+		frmBackupService.setBounds(100, 100, 912, 450);
 		frmBackupService.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmBackupService.getContentPane().setLayout(null);
 
@@ -109,17 +126,20 @@ public class VisualInterface implements BackupListener {
 					}
 				}));
 		tree.setRootVisible(false);
+		tree.getSelectionModel().setSelectionMode(
+				TreeSelectionModel.SINGLE_TREE_SELECTION);
+		tree.addTreeSelectionListener(this);
 		tree.setBorder(new CompoundBorder(new LineBorder(new Color(0, 0, 0)),
 				null));
 		tree.setShowsRootHandles(true);
-		tree.setBounds(10, 77, 705, 243);
+		tree.setBounds(10, 77, 650, 243);
 
 		JScrollPane qPane = new JScrollPane(tree,
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		qPane.setBorder(new CompoundBorder(new LineBorder(new Color(0, 0, 0)),
 				null));
-		qPane.setBounds(10, 77, 705, 243);
+		qPane.setBounds(10, 77, 650, 243);
 		frmBackupService.getContentPane().add(qPane);
 
 		JLabel lblBackupService = new JLabel("Backup Service");
@@ -135,18 +155,15 @@ public class VisualInterface implements BackupListener {
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File file = fc.getSelectedFile();
 
-					server.backupFile(file);
-
+					server.backupFile(file, new Integer(
+							VisualInterface.this.degreeField.getText()));
+					VisualInterface.this.clearDetailedText();
+					restoreButton.setEnabled(false);
 				}
 			}
 		});
 		btnNewButton.setBounds(10, 331, 89, 23);
 		frmBackupService.getContentPane().add(btnNewButton);
-
-		JButton btnRestore = new JButton("Restore");
-		btnRestore.setEnabled(false);
-		btnRestore.setBounds(102, 331, 89, 23);
-		frmBackupService.getContentPane().add(btnRestore);
 
 		JButton btnDeleteAllChunks = new JButton("Delete All Chunks");
 		btnDeleteAllChunks.addActionListener(new ActionListener() {
@@ -154,8 +171,126 @@ public class VisualInterface implements BackupListener {
 				server.deleteData();
 			}
 		});
-		btnDeleteAllChunks.setBounds(591, 331, 124, 23);
+		btnDeleteAllChunks.setBounds(535, 331, 124, 23);
 		frmBackupService.getContentPane().add(btnDeleteAllChunks);
+
+		JPanel panel_1 = new JPanel();
+		panel_1.setBorder(new TitledBorder(null, "Detailed File Info",
+				TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel_1.setBounds(676, 61, 226, 266);
+		frmBackupService.getContentPane().add(panel_1);
+		panel_1.setLayout(null);
+
+		Panel panel = new Panel();
+		panel.setBounds(6, 16, 214, 243);
+		panel_1.add(panel);
+		panel.setLayout(null);
+
+		JLabel lblName = new JLabel("Name: ");
+		lblName.setBounds(10, 14, 46, 14);
+		panel.add(lblName);
+
+		JLabel lblPath = new JLabel("Path: ");
+		lblPath.setBounds(10, 52, 29, 14);
+		panel.add(lblPath);
+
+		JLabel lblSize = new JLabel("Size:");
+		lblSize.setBounds(10, 106, 46, 14);
+		panel.add(lblSize);
+
+		JLabel lblBytes = new JLabel("Bytes");
+		lblBytes.setBounds(158, 106, 46, 14);
+		panel.add(lblBytes);
+
+		JLabel lblReplicationDegree = new JLabel("Replication Degree");
+		lblReplicationDegree.setBounds(58, 135, 111, 14);
+		panel.add(lblReplicationDegree);
+
+		JLabel lblDesiredDegree = new JLabel("Desired Degree");
+		lblDesiredDegree.setBounds(68, 163, 89, 14);
+		panel.add(lblDesiredDegree);
+
+		nameField = new JTextField();
+		nameField.setEditable(false);
+		nameField.setBounds(48, 11, 156, 20);
+		panel.add(nameField);
+		nameField.setColumns(10);
+
+		pathField = new JTextField();
+		pathField.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent arg0) {
+				pathField.moveCaretPosition(0);
+				pathField.selectAll();
+			}
+
+			@Override
+			public void focusLost(FocusEvent arg0) {
+				pathField.setCaretPosition(0);
+
+			}
+		});
+		pathField.setEditable(false);
+		pathField.setColumns(10);
+		pathField.setBounds(38, 49, 166, 20);
+		panel.add(pathField);
+
+		sizeField = new JTextField();
+		sizeField.setEditable(false);
+		sizeField.setColumns(10);
+		sizeField.setBounds(48, 103, 100, 20);
+		panel.add(sizeField);
+
+		replicationField = new JTextField();
+		replicationField.setEditable(false);
+		replicationField.setColumns(10);
+		replicationField.setBounds(157, 132, 36, 20);
+		panel.add(replicationField);
+
+		desiredField = new JTextField();
+		desiredField.setEditable(false);
+		desiredField.setColumns(10);
+		desiredField.setBounds(157, 160, 36, 20);
+		panel.add(desiredField);
+
+		restoreButton = new JButton("Restore");
+		restoreButton.setBounds(115, 209, 89, 23);
+		panel.add(restoreButton);
+		restoreButton.setEnabled(false);
+
+		JLabel lblDefaultReplicationDegree = new JLabel("Replication Degree:");
+		lblDefaultReplicationDegree.setBounds(10, 365, 108, 14);
+		frmBackupService.getContentPane().add(lblDefaultReplicationDegree);
+
+		degreeField = new JTextField();
+
+		final JSlider slider = new JSlider();
+		slider.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent arg0) {
+				frmBackupService.requestFocusInWindow();
+			}
+		});
+		slider.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				degreeField.setText(slider.getValue() + "");
+				frmBackupService.requestFocusInWindow();
+			}
+		});
+		slider.setSnapToTicks(true);
+		slider.setPaintTicks(true);
+		slider.setMajorTickSpacing(1);
+		slider.setValue(3);
+		slider.setMinorTickSpacing(1);
+		slider.setMinimum(1);
+		slider.setMaximum(10);
+		slider.setBounds(10, 385, 141, 36);
+		frmBackupService.getContentPane().add(slider);
+
+		degreeField.setEditable(false);
+		degreeField.setBounds(109, 362, 42, 20);
+		frmBackupService.getContentPane().add(degreeField);
+		degreeField.setColumns(10);
 		frmBackupService.setLocationRelativeTo(null);
 	}
 
@@ -164,14 +299,7 @@ public class VisualInterface implements BackupListener {
 		private static final long serialVersionUID = -8070832356267898503L;
 
 		@Override
-		public Component getTreeCellRendererComponent(
-				JTree tree,
-				Object value,
-				boolean sel,
-				boolean expanded,
-				boolean leaf,
-				int row,
-				boolean hasFocus) {
+		public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
 			super.getTreeCellRendererComponent(tree, value, sel, expanded,
 					leaf, row, hasFocus);
 
@@ -220,8 +348,80 @@ public class VisualInterface implements BackupListener {
 	}
 
 	@Override
-	public void updateFiles(Vector<FileInfo> chunks) {
-		// TODO Auto-generated method stub
+	public void updateFiles(Vector<FileInfo> files) {
 
+		filesHeld.removeAllChildren();
+
+		for (int i = 0; i < files.size(); i++) {
+			filesHeld.add(new DefaultMutableTreeNode(files.get(i).getName()));
+		}
+
+		DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
+		model.reload(root);
+
+	}
+
+	@Override
+	public void valueChanged(TreeSelectionEvent arg0) {
+		DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree
+				.getLastSelectedPathComponent();
+
+		if (node == null) {
+			selectedNode = null;
+			return;
+		}
+
+		String nodeInfo = (String) node.getUserObject();
+		if (node.isLeaf()) {
+			if (node.getParent() != null) {
+				if (((DefaultMutableTreeNode) node.getParent()).getUserObject()
+						.equals("Files"))
+					selectedNode = nodeInfo;
+				else
+					selectedNode = null;
+			} else
+				selectedNode = null;
+		} else
+			selectedNode = null;
+		if (selectedNode != null) {
+			setDetailedFileText();
+			restoreButton.setEnabled(true);
+		} else {
+			clearDetailedText();
+			restoreButton.setEnabled(false);
+		}
+	}
+
+	private void setDetailedFileText() {
+		if (selectedNode != null) {
+			FileInfo file = FilesRecord.getFilesRecord().getFileInfo(
+					selectedNode);
+			setDetailedText(file.getName(), file.getPath(), file.getSize(),
+					file.getReplicationDegree(), file.getDesiredDegree());
+		}
+	}
+
+	private void clearDetailedText() {
+		nameField.setText("");
+		pathField.setText("");
+		sizeField.setText("");
+		replicationField.setText("");
+		desiredField.setText("");
+	}
+
+	private void setDetailedText(String name, String path, int size, int replicationDegree, int desiredDegree) {
+		nameField.setText(name);
+		nameField.setCaretPosition(0);
+		pathField.setText(path);
+		pathField.setCaretPosition(0);
+		sizeField.setText(size + "");
+		sizeField.setCaretPosition(0);
+		replicationField.setText(replicationDegree + "");
+		desiredField.setText(desiredDegree + "");
+		if (replicationDegree < desiredDegree)
+			replicationField.setForeground(Color.RED);
+		else
+			replicationField.setForeground(Color.BLACK);
 	}
 }
