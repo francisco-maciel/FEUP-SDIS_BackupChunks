@@ -28,7 +28,12 @@ public class Chunk implements Serializable {
 
 	public String getName() {
 
-		return getChunkFileName();
+		return fileId;
+	}
+
+	public int getNo() {
+
+		return chunkNo;
 	}
 
 }

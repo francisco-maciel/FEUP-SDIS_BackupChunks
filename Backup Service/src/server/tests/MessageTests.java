@@ -1,6 +1,9 @@
 package server.tests;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -18,11 +21,10 @@ public class MessageTests {
 
 	@Test
 	public void testMessageChunk() {
-		String message = "CHUNK " + Version.get() + " chunkName 0\r\n\r\nbody";
+		String message = "CHUNK " + Version.get() + " chunkName 0\r\n\r\n";
 
 		// test message.tostring
-		Message m = new MessageChunk("chunkName", 0,
-				new String("body").getBytes());
+		Message m = new MessageChunk("chunkName", 0, new String("").getBytes());
 		assertEquals(message, m.toMessage());
 
 		// test parse message
@@ -33,7 +35,7 @@ public class MessageTests {
 			MessageChunk mc = (MessageChunk) parsed;
 			assertEquals(mc.getChunkNo(), 0);
 			assertEquals(mc.getFileId(), "chunkName");
-			assertEquals(new String(mc.getBody()), "body");
+			assertEquals(new String(mc.getBody()), "");
 			assertEquals(mc.getVersion(), Version.get());
 
 		} catch (UnrecognizedMessageException e) {
@@ -88,9 +90,9 @@ public class MessageTests {
 	@Test
 	public void testMessagePutChunk() {
 		String message = "PUTCHUNK " + Version.get()
-				+ " chunkName 0 10\r\n\r\nbody";
-		Message m = new MessagePutChunk("chunkName", 0,
-				new String("body").getBytes(), 10);
+				+ " chunkName 0 10\r\n\r\nbody\n\nbody\n";
+		Message m = new MessagePutChunk("chunkName", 0, new String(
+				"body\n\nbody\n").getBytes(), 10);
 		assertEquals(message, m.toMessage());
 
 		try {
@@ -101,7 +103,7 @@ public class MessageTests {
 			assertEquals(mc.getChunkNo(), 0);
 			assertEquals(mc.getFileId(), "chunkName");
 			assertEquals(mc.getVersion(), Version.get());
-			assertEquals(new String(mc.getBody()), "body");
+			assertEquals(new String(mc.getBody()), "body\n\nbody\n");
 
 		} catch (UnrecognizedMessageException e) {
 			fail("Unrecognized message received");

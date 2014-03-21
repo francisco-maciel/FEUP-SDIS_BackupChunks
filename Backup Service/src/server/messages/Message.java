@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import server.Version;
@@ -61,8 +62,7 @@ public abstract class Message {
 
 	public abstract String toMessage();
 
-	public static Message parse(String message)
-			throws UnrecognizedMessageException {
+	public static Message parse(String message) throws UnrecognizedMessageException {
 		Message parsed = null;
 
 		if (message == null)
@@ -74,8 +74,7 @@ public abstract class Message {
 
 	}
 
-	private static Message parseHead(String message)
-			throws UnrecognizedMessageException {
+	private static Message parseHead(String message) throws UnrecognizedMessageException {
 		Message parsed = null;
 		int lineIndex = 0;
 		HashMap<MessageType, Integer> wordsByType = new HashMap<MessageType, Integer>();
@@ -122,12 +121,19 @@ public abstract class Message {
 					|| parsed.type.equals(MessageType.CHUNK)) {
 
 				try {
-					String body = br.readLine();
+					int size = 0;
 
-					if (body == null)
-						return null;
-					else
-						parsed.setBody(body.getBytes());
+					char[] buf = new char[1024 * 64 + 1];
+					int read = 0;
+					int newchars = 0;
+					boolean hasBody = false;
+					while ((newchars = br.read(buf)) != -1) {
+						hasBody = true;
+						read += newchars;
+					}
+					String fullBody = new String(Arrays.copyOf(buf, read));
+
+					parsed.setBody(fullBody.getBytes());
 
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -141,9 +147,7 @@ public abstract class Message {
 
 	public abstract void setBody(byte[] bytes);
 
-	private static Message generateMessageHeader(
-			MessageType type,
-			String[] words) throws UnrecognizedMessageException {
+	private static Message generateMessageHeader(MessageType type, String[] words) throws UnrecognizedMessageException {
 		Message newMessage = null;
 		try {
 			if (type.equals(MessageType.PUTCHUNK))
@@ -179,8 +183,7 @@ public abstract class Message {
 		wordsByType.put(MessageType.STORED, 4);
 	}
 
-	private static MessageType getMessageType(String header)
-			throws UnrecognizedMessageException {
+	private static MessageType getMessageType(String header) throws UnrecognizedMessageException {
 		if (header.equalsIgnoreCase("PUTCHUNK"))
 			return MessageType.PUTCHUNK;
 		else if (header.equalsIgnoreCase("CHUNK"))

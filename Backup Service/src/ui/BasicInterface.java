@@ -9,11 +9,11 @@ import utils.Debug;
 
 public class BasicInterface {
 
-	public static final String MC_ADDRESS = "224.0.0.1";
+	public static final String MC_ADDRESS = "225.0.1.1";
 	public static final int MC_PORT = 5601;
-	public static final String MDB_ADDRESS = "224.0.0.2";
+	public static final String MDB_ADDRESS = "225.0.1.2";
 	public static final int MDB_PORT = 5602;
-	public static final String MDR_ADDRESS = "224.0.0.3";
+	public static final String MDR_ADDRESS = "225.0.1.3";
 	public static final int MDR_PORT = 5603;
 
 	public static void main(String args[]) {

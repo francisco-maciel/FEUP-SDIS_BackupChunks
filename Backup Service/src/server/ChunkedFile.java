@@ -12,8 +12,6 @@ import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
 
-import org.junit.internal.ArrayComparisonFailure;
-
 public class ChunkedFile {
 
 	String path;
@@ -145,5 +143,9 @@ public class ChunkedFile {
 		return "File: " + fileName + "\nPath: " + path + "\nSize: " + size
 				+ "\nChunks: " + data.size();
 
+	}
+
+	public int getNChunks() {
+		return data.size();
 	}
 }

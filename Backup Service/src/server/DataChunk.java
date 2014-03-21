@@ -1,5 +1,7 @@
 package server;
 
+import java.util.Arrays;
+
 public class DataChunk extends Chunk {
 
 	private static final long serialVersionUID = 1L;
@@ -10,8 +12,9 @@ public class DataChunk extends Chunk {
 
 	public DataChunk(String fileId, int chunkNo, byte[] data, int size) {
 		super(fileId, chunkNo);
-		this.data = data;
 		this.size = size;
+		this.data = Arrays.copyOf(data, size);
+
 	}
 
 	public byte[] getData() {
@@ -22,4 +25,5 @@ public class DataChunk extends Chunk {
 
 		return this.size;
 	}
+
 }
