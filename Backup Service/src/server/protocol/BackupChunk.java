@@ -107,7 +107,8 @@ public class BackupChunk extends Thread {
 							&& received.getFileId().equals(name)
 							&& received.getChunkNo() == no) {
 
-						// TODO a chunk foi recebida por alguem.
+						// TODO a chunk foi recebida por alguem. nao esta a
+						// tratar to update ao size
 						System.out.println("GOT " + received.getType());
 						timer.cancel();
 						break;

@@ -20,7 +20,7 @@ public class ChunkedFile {
 	String cryptName;
 	Vector<DataChunk> data;
 	int size;
-	public static final int CHUNK_SIZE = 64 * 1024;
+	public static final int CHUNK_SIZE = 64 * 1000;
 
 	public ChunkedFile() {
 		this.path = "";

@@ -339,7 +339,8 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		chunksHeld.removeAllChildren();
 
 		for (int i = 0; i < chunks.size(); i++) {
-			chunksHeld.add(new DefaultMutableTreeNode(chunks.get(i).getName()));
+			chunksHeld.add(new DefaultMutableTreeNode(chunks.get(i)
+					.getChunkFileName()));
 		}
 
 		DefaultTreeModel model = (DefaultTreeModel) tree.getModel();

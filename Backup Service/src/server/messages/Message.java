@@ -123,7 +123,7 @@ public abstract class Message {
 				try {
 					int size = 0;
 
-					char[] buf = new char[1024 * 64 + 1];
+					char[] buf = new char[1000 * 64 + 1];
 					int read = 0;
 					int newchars = 0;
 					boolean hasBody = false;
