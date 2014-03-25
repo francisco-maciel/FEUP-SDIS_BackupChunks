@@ -5,8 +5,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.Arrays;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.HashSet;
 
 import server.BackupServer;
 import server.DataChunk;
@@ -20,8 +19,12 @@ public class BackupChunk extends Thread {
 	int desiredDegree;
 	int timeout;
 	int timoutCounter;
+	HashSet<InetAddress> repplies;
+	MulticastSocket sendServer;
+	DatagramPacket packet;
 
 	public BackupChunk(DataChunk chunk, int degree) {
+		repplies = new HashSet<InetAddress>();
 		this.chunk = chunk;
 		desiredDegree = degree;
 		timeout = 500;
@@ -40,7 +43,6 @@ public class BackupChunk extends Thread {
 			String message = new MessagePutChunk(chunk.getName(),
 					chunk.getNo(), chunk.getData(), desiredDegree).toMessage();
 
-			@SuppressWarnings("resource")
 			MulticastSocket server = new MulticastSocket(BackupServer.mdb_port);
 			byte buf[] = message.getBytes();
 
@@ -49,18 +51,18 @@ public class BackupChunk extends Thread {
 					BackupServer.mdb_port);
 
 			server.setTimeToLive(1);
-			server.send(pack);
+			sendServer = server;
+			packet = pack;
 			listenForStored(chunk.getName(), chunk.getNo());
 
 		} catch (IOException e) {
 
 			e.printStackTrace();
 		}
+
 	}
 
 	private void listenForStored(String name, int no) {
-
-		final Timer timer = new Timer();
 		try {
 
 			final MulticastSocket s = new MulticastSocket(BackupServer.mc_port);
@@ -69,65 +71,67 @@ public class BackupChunk extends Thread {
 			byte buf[] = new byte[1024 * 64];
 			DatagramPacket pack = new DatagramPacket(buf, buf.length);
 
-			class WaitTimeout extends TimerTask {
-				public void run() {
+			(new Sleep(200)).go();
 
-					try {
-						s.leaveGroup(InetAddress
-								.getByName(BackupServer.mc_address));
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					s.close();
-					timer.cancel();
-				}
-			}
+			long oldTime = (new java.util.Date()).getTime();
 
+			sendServer.send(packet);
 			while (true) {
 
 				try {
-					timer.schedule(new WaitTimeout(), timeout);
+					int diff = (int) ((new java.util.Date()).getTime() - oldTime);
+
+					s.setSoTimeout(Math.abs(timeout - diff));
 					s.receive(pack);
-				} catch (java.net.SocketTimeoutException e) {
-					System.out.println("timeout. remaining: "
-							+ s.getSoTimeout());
-				}
 
-				String data = new String(Arrays.copyOf(pack.getData(),
-						pack.getLength()));
+					String data = new String(Arrays.copyOf(pack.getData(),
+							pack.getLength()));
 
-				Message received = null;
-				try {
-					received = Message.parse(data);
-				} catch (UnrecognizedMessageException e) {
-					System.out.println("Ignored Message");
-				}
-				if (received != null) {
-					if (received.getType().equals(MessageType.STORED)
-							&& received.getFileId().equals(name)
-							&& received.getChunkNo() == no) {
-
-						// TODO a chunk foi recebida por alguem. nao esta a
-						// tratar to update ao size
-						System.out.println("GOT " + received.getType());
-						timer.cancel();
-						break;
+					Message received = null;
+					try {
+						received = Message.parse(data);
+					} catch (UnrecognizedMessageException e) {
 					}
+					if (received != null) {
+						if (received.getType().equals(MessageType.STORED)
+								&& received.getFileId().equals(name)
+								&& received.getChunkNo() == no) {
+
+							repplies.add(pack.getAddress());
+							// System.out.println("BCK:GOT " +
+							// received.getType());
+
+							if (repplies.size() >= desiredDegree) {
+								break;
+							}
+						}
+					}
+
+				} catch (java.net.SocketTimeoutException e) {
+
+					timoutCounter++;
+					// System.out.println("timeout");
+					if (timoutCounter == 5) {
+						s.close();
+						return;
+					}
+
+					(new Sleep(200)).go();
+
+					timeout = timeout * 2;
+					oldTime = (new java.util.Date()).getTime();
+					sendServer.send(packet);
+
 				}
 
 			}
-			s.leaveGroup(InetAddress.getByName(BackupServer.mc_address));
+
+			if (!s.isClosed())
+				s.leaveGroup(InetAddress.getByName(BackupServer.mc_address));
 			s.close();
 
 		} catch (IOException e) {
-			if (e.getMessage().equals("socket closed")) {
-				timoutCounter++;
-				// System.out.println("timeout");
-				if (timoutCounter == 5)
-					return;
-				timeout = timeout * 2;
-				sendChunk();
-			}
+			e.printStackTrace();
 		}
 
 	}

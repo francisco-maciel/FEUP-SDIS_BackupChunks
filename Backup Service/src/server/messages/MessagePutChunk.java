@@ -50,4 +50,8 @@ public class MessagePutChunk extends Message {
 		return body;
 	}
 
+	public int getDegree() {
+		return replicationDeg;
+	}
+
 }

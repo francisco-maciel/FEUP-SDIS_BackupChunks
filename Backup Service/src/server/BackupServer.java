@@ -1,8 +1,10 @@
 package server;
 
 import java.io.File;
+import java.util.Vector;
 
 import server.protocol.ChunkBackupProtocolInitiator;
+import server.protocol.MCListener;
 import server.protocol.MDBListener;
 import ui.BackupListener;
 
@@ -32,10 +34,11 @@ public class BackupServer {
 
 	public void start() {
 
-		record.printChunksHeld();
-		files.printFilesHeld();
+		// record.printChunksHeld();
+		// files.printFilesHeld();
 		updateVisuals();
 		(new Thread(new MDBListener(this))).start();
+		(new Thread(new MCListener(this))).start();
 	}
 
 	public boolean backupFile(File file, int degree) {
@@ -57,11 +60,12 @@ public class BackupServer {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	public void updateVisuals() {
 		if (listener != null)
-			listener.updateChunks(record.getChunks());
+			listener.updateChunks((Vector<Chunk>) record.getChunks().clone());
 		if (listener != null)
-			listener.updateFiles(files.getFiles());
+			listener.updateFiles((Vector<FileInfo>) files.getFiles().clone());
 	}
 
 	public ChunksRecord getRecord() {
@@ -82,6 +86,7 @@ public class BackupServer {
 	}
 
 	public FilesRecord getFilesRecord() {
+
 		return files;
 	}
 

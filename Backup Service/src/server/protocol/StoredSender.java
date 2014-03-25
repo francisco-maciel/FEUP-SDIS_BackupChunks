@@ -20,6 +20,7 @@ public class StoredSender implements Runnable {
 
 	@Override
 	public void run() {
+		(new Sleep(400)).go();
 		// TODO random 0 - 400 ms interval
 		try {
 			String message = new MessageStored(name, no).toMessage();

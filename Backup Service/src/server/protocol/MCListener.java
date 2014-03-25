@@ -7,16 +7,15 @@ import java.net.MulticastSocket;
 import java.util.Arrays;
 
 import server.BackupServer;
-import server.DataChunk;
+import server.ChunksRecord;
 import server.messages.Message;
-import server.messages.MessagePutChunk;
 import server.messages.MessageType;
 import server.messages.UnrecognizedMessageException;
 
-public class MDBListener implements Runnable {
+public class MCListener implements Runnable {
 	BackupServer bs;
 
-	public MDBListener(BackupServer bs) {
+	public MCListener(BackupServer bs) {
 		this.bs = bs;
 	}
 
@@ -24,9 +23,9 @@ public class MDBListener implements Runnable {
 	public void run() {
 		MulticastSocket socket;
 		try {
-			socket = new MulticastSocket(BackupServer.mdb_port);
+			socket = new MulticastSocket(BackupServer.mc_port);
 
-			socket.joinGroup(InetAddress.getByName(BackupServer.mdb_address));
+			socket.joinGroup(InetAddress.getByName(BackupServer.mc_address));
 
 			byte buf[] = new byte[1024 * 64];
 			DatagramPacket pack = new DatagramPacket(buf, buf.length);
@@ -42,9 +41,10 @@ public class MDBListener implements Runnable {
 					System.out.println("Ignored Message");
 				}
 				if (received != null) {
-					System.out.println("MDB: GOT " + received.getType());
-					if (received.getType().equals(MessageType.PUTCHUNK))
-						handlePutChunk(received, pack.getAddress());
+					System.out.println("MC : GOT " + received.getType());
+					if (received.getType().equals(MessageType.STORED))
+						handleStored(received, pack.getAddress());
+
 				}
 
 			}
@@ -53,7 +53,7 @@ public class MDBListener implements Runnable {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		// s.leaveGroup(InetAddress.getByName(BackupServer.mdb_address));
+		// s.leaveGroup(InetAddress.getByName(BackupServer.mc_address));
 		// s.close();
 	}
 
@@ -64,21 +64,15 @@ public class MDBListener implements Runnable {
 		return data;
 	}
 
-	private void handlePutChunk(Message received, InetAddress origin) {
-		MessagePutChunk mpc = (MessagePutChunk) received;
-		DataChunk dc = new DataChunk(mpc.getFileId(), mpc.getChunkNo(),
-				mpc.getBody(), mpc.getBody().length);
-		dc.desiredDegree = mpc.getDegree();
-		boolean stored = bs.getRecord().addChunk(dc);
-		if (stored) {
+	private void handleStored(Message received, InetAddress inetAddress) {
+		if (ChunksRecord.getChunksRecord().incrementChunkValue(
+				received.getFileId(), inetAddress, received.getChunkNo())) {
 			java.awt.EventQueue.invokeLater(new Runnable() {
 				public void run() {
 					bs.updateVisuals();
 				}
 			});
 		}
-		(new Thread(new StoredSender(received.getFileId(),
-				received.getChunkNo()))).start();
 
 	}
 }

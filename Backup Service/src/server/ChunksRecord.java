@@ -12,6 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.util.Vector;
 
 import utils.Debug;
@@ -82,13 +83,11 @@ public class ChunksRecord {
 		}
 	}
 
-	public boolean addChunk(DataChunk dc) {
-		return addChunk(dc.fileId, dc.chunkNo, dc.getData(), dc.getSize());
-	}
-
-	public boolean addChunk(String fileId, int chunkNo, byte[] data, int size) {
-		Chunk newC = new Chunk(fileId, chunkNo);
-
+	@SuppressWarnings("unchecked")
+	public synchronized boolean addChunk(DataChunk newC) {
+		// TODO if chunk does not exists and ERROR throw exeption. if chunk
+		// exists just return false
+		// update behaviour of MDBputchunk listener accordingly
 		File f = new File("data" + File.separator + "chunks" + File.separator
 				+ newC.getChunkFileName());
 		try {
@@ -98,14 +97,18 @@ public class ChunksRecord {
 			OutputStream file = new FileOutputStream(f);
 			BufferedOutputStream buffer = new BufferedOutputStream(file);
 
-			buffer.write(data, 0, size);
+			buffer.write(newC.getData(), 0, newC.getSize());
 			buffer.close();
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		Chunk c = new Chunk(newC.getName(), newC.getNo(), newC.getSize());
+		c.actualDegree = newC.actualDegree;
+		c.desiredDegree = newC.desiredDegree;
+		c.origins = (Vector<String>) newC.origins.clone();
 
-		chunks.add(newC);
+		chunks.add(c);
 
 		updateRecordFile();
 		return true;
@@ -151,7 +154,35 @@ public class ChunksRecord {
 		}
 	}
 
-	public Vector<Chunk> getChunks() {
+	public synchronized Vector<Chunk> getChunks() {
 		return chunks;
+	}
+
+	public synchronized boolean incrementChunkValue(String fileId, InetAddress inetAddress, int chunkNo) {
+		try {
+			int index = getChunkIndex(fileId, chunkNo);
+			if (index != -1) {
+				if (!chunks.get(index).getOrigins()
+						.contains(inetAddress.getCanonicalHostName())) {
+					chunks.get(index).addOrigin(inetAddress);
+					chunks.get(index).actualDegree++;
+					updateRecordFile();
+					return true;
+				}
+			}
+		} catch (Exception e) {
+			return false;
+		}
+		return false;
+	}
+
+	public synchronized int getChunkIndex(String fileId, int chunkNo) {
+		for (int i = 0; i < chunks.size(); i++) {
+			if (chunks.get(i).chunkNo == chunkNo
+					&& chunks.get(i).getName().equals(fileId))
+				return i;
+		}
+
+		return -1;
 	}
 }

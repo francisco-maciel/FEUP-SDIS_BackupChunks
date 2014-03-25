@@ -38,6 +38,7 @@ import javax.swing.tree.TreeSelectionModel;
 
 import server.BackupServer;
 import server.Chunk;
+import server.ChunksRecord;
 import server.FileInfo;
 import server.FilesRecord;
 
@@ -49,6 +50,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	DefaultMutableTreeNode chunksHeld;
 	JTree tree;
 	String selectedNode;
+	String selectedChunk;
 	private JTextField nameField;
 	private JTextField pathField;
 	private JTextField sizeField;
@@ -56,6 +58,11 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	private JTextField desiredField;
 	JButton restoreButton;
 	private JTextField degreeField;
+	private JTextField fileIdField;
+	private JTextField chunkNoField;
+	private JTextField chunkSizeField;
+	private JTextField replicationDegreeField;
+	private JTextField DesiredDegreeField;
 
 	/**
 	 * Launch the application.
@@ -99,12 +106,13 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	 */
 	private void initialize() {
 		selectedNode = null;
+		selectedChunk = null;
 		frmBackupService = new JFrame();
 		frmBackupService.setIconImage(((ImageIcon) UIManager
 				.getIcon("FileView.hardDriveIcon")).getImage());
 		frmBackupService.setResizable(false);
 		frmBackupService.setTitle("Backup Service");
-		frmBackupService.setBounds(100, 100, 912, 450);
+		frmBackupService.setBounds(100, 100, 912, 500);
 		frmBackupService.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmBackupService.getContentPane().setLayout(null);
 
@@ -169,6 +177,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		btnDeleteAllChunks.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				server.deleteData();
+
 			}
 		});
 		btnDeleteAllChunks.setBounds(535, 331, 124, 23);
@@ -177,12 +186,12 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(null, "Detailed File Info",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel_1.setBounds(676, 61, 226, 266);
+		panel_1.setBounds(680, 43, 226, 243);
 		frmBackupService.getContentPane().add(panel_1);
 		panel_1.setLayout(null);
 
 		Panel panel = new Panel();
-		panel.setBounds(6, 16, 214, 243);
+		panel.setBounds(6, 16, 214, 216);
 		panel_1.add(panel);
 		panel.setLayout(null);
 
@@ -254,7 +263,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		panel.add(desiredField);
 
 		restoreButton = new JButton("Restore");
-		restoreButton.setBounds(115, 209, 89, 23);
+		restoreButton.setBounds(115, 188, 89, 23);
 		panel.add(restoreButton);
 		restoreButton.setEnabled(false);
 
@@ -291,6 +300,72 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		degreeField.setBounds(109, 362, 42, 20);
 		frmBackupService.getContentPane().add(degreeField);
 		degreeField.setColumns(10);
+
+		JPanel panel_3 = new JPanel();
+		panel_3.setBorder(new TitledBorder(null, "Chunk Info",
+				TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel_3.setBounds(680, 294, 226, 170);
+		frmBackupService.getContentPane().add(panel_3);
+		panel_3.setLayout(null);
+
+		Panel panel_2 = new Panel();
+		panel_2.setBounds(10, 25, 206, 135);
+		panel_3.add(panel_2);
+		panel_2.setLayout(null);
+
+		JLabel lblFileid = new JLabel("FileId:");
+		lblFileid.setBounds(10, 14, 46, 14);
+		panel_2.add(lblFileid);
+
+		JLabel lblChunkno = new JLabel("ChunkNo:");
+		lblChunkno.setBounds(10, 39, 62, 14);
+		panel_2.add(lblChunkno);
+
+		JLabel label_2 = new JLabel("Size:");
+		label_2.setBounds(10, 64, 46, 14);
+		panel_2.add(label_2);
+
+		JLabel label_3 = new JLabel("Bytes");
+		label_3.setBounds(158, 64, 46, 14);
+		panel_2.add(label_3);
+
+		JLabel label_4 = new JLabel("Replication Degree");
+		label_4.setBounds(48, 89, 111, 14);
+		panel_2.add(label_4);
+
+		JLabel label_5 = new JLabel("Desired Degree");
+		label_5.setBounds(58, 114, 89, 14);
+		panel_2.add(label_5);
+
+		fileIdField = new JTextField();
+		fileIdField.setEditable(false);
+		fileIdField.setColumns(10);
+		fileIdField.setBounds(48, 11, 156, 20);
+		panel_2.add(fileIdField);
+
+		chunkNoField = new JTextField();
+		chunkNoField.setEditable(false);
+		chunkNoField.setColumns(10);
+		chunkNoField.setBounds(68, 36, 46, 20);
+		panel_2.add(chunkNoField);
+
+		chunkSizeField = new JTextField();
+		chunkSizeField.setEditable(false);
+		chunkSizeField.setColumns(10);
+		chunkSizeField.setBounds(48, 64, 100, 20);
+		panel_2.add(chunkSizeField);
+
+		replicationDegreeField = new JTextField();
+		replicationDegreeField.setEditable(false);
+		replicationDegreeField.setColumns(10);
+		replicationDegreeField.setBounds(139, 89, 36, 20);
+		panel_2.add(replicationDegreeField);
+
+		DesiredDegreeField = new JTextField();
+		DesiredDegreeField.setEditable(false);
+		DesiredDegreeField.setColumns(10);
+		DesiredDegreeField.setBounds(139, 114, 36, 20);
+		panel_2.add(DesiredDegreeField);
 		frmBackupService.setLocationRelativeTo(null);
 	}
 
@@ -336,20 +411,28 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 
 	@Override
 	public void updateChunks(Vector<Chunk> chunks) {
-		chunksHeld.removeAllChildren();
 
-		for (int i = 0; i < chunks.size(); i++) {
-			chunksHeld.add(new DefaultMutableTreeNode(chunks.get(i)
-					.getChunkFileName()));
+		try {
+			chunksHeld.removeAllChildren();
+
+			for (int i = 0; i < chunks.size(); i++) {
+				chunksHeld.add(new DefaultMutableTreeNode(chunks.get(i)
+						.getChunkFileName()));
+			}
+
+			DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+			DefaultMutableTreeNode root = (DefaultMutableTreeNode) model
+					.getRoot();
+			model.reload(root);
+			clearDetailedText();
+			clearDetailedChunkText();
+		} catch (Exception e) {
+
 		}
-
-		DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
-		model.reload(root);
 	}
 
 	@Override
-	public void updateFiles(Vector<FileInfo> files) {
+	public synchronized void updateFiles(Vector<FileInfo> files) {
 
 		filesHeld.removeAllChildren();
 
@@ -360,16 +443,19 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
 		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
 		model.reload(root);
+		clearDetailedText();
+		clearDetailedChunkText();
 
 	}
 
 	@Override
-	public void valueChanged(TreeSelectionEvent arg0) {
+	public synchronized void valueChanged(TreeSelectionEvent arg0) {
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree
 				.getLastSelectedPathComponent();
 
 		if (node == null) {
 			selectedNode = null;
+			selectedChunk = null;
 			return;
 		}
 
@@ -377,20 +463,41 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		if (node.isLeaf()) {
 			if (node.getParent() != null) {
 				if (((DefaultMutableTreeNode) node.getParent()).getUserObject()
-						.equals("Files"))
+						.equals("Files")) {
 					selectedNode = nodeInfo;
-				else
+					selectedChunk = null;
+				} else
 					selectedNode = null;
-			} else
+
+				if (((DefaultMutableTreeNode) node.getParent()).getUserObject()
+						.equals("Chunks")) {
+					selectedChunk = nodeInfo;
+					selectedNode = null;
+				} else
+					selectedChunk = null;
+			} else {
 				selectedNode = null;
-		} else
+				selectedChunk = null;
+			}
+		} else {
 			selectedNode = null;
+			selectedChunk = null;
+		}
+
 		if (selectedNode != null) {
 			setDetailedFileText();
+			clearDetailedChunkText();
 			restoreButton.setEnabled(true);
 		} else {
 			clearDetailedText();
 			restoreButton.setEnabled(false);
+		}
+
+		if (selectedChunk != null) {
+			setDetailedChunkText();
+			clearDetailedText();
+		} else {
+			clearDetailedChunkText();
 		}
 	}
 
@@ -403,12 +510,54 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		}
 	}
 
+	private void setDetailedChunkText() {
+		if (selectedChunk != null) {
+			for (int i = 0; i < ChunksRecord.getChunksRecord().getChunks()
+					.size(); i++) {
+				if (ChunksRecord.getChunksRecord().getChunks().get(i)
+						.getChunkFileName().equals(selectedChunk)) {
+					Chunk chunk = ChunksRecord.getChunksRecord().getChunks()
+							.get(i);
+					setDetailedChunk(chunk.getName(), chunk.getNo(),
+							chunk.getSize(), chunk.actualDegree,
+							chunk.desiredDegree);
+
+				}
+			}
+		}
+	}
+
+	private void setDetailedChunk(String name, int no, int size, int actualDegree, int desiredDegree) {
+		fileIdField.setText(name);
+		fileIdField.setCaretPosition(0);
+		chunkSizeField.setText(size + "");
+		chunkSizeField.setCaretPosition(0);
+		chunkNoField.setText(no + "");
+		chunkNoField.setCaretPosition(0);
+
+		replicationDegreeField.setText(actualDegree + "");
+		DesiredDegreeField.setText(desiredDegree + "");
+		if (actualDegree < desiredDegree)
+			replicationDegreeField.setForeground(Color.RED);
+		else
+			replicationDegreeField.setForeground(Color.BLACK);
+	}
+
 	private void clearDetailedText() {
 		nameField.setText("");
 		pathField.setText("");
 		sizeField.setText("");
 		replicationField.setText("");
 		desiredField.setText("");
+	}
+
+	private void clearDetailedChunkText() {
+		fileIdField.setText("");
+		chunkSizeField.setText("");
+		chunkNoField.setText("");
+		replicationDegreeField.setText("");
+		DesiredDegreeField.setText("");
+
 	}
 
 	private void setDetailedText(String name, String path, int size, int replicationDegree, int desiredDegree) {
