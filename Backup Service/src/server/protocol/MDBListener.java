@@ -44,13 +44,12 @@ public class MDBListener implements Runnable {
 				if (received != null) {
 					System.out.println("MDB: GOT " + received.getType());
 					if (received.getType().equals(MessageType.PUTCHUNK))
-						handlePutChunk(received, pack.getAddress());
+						handlePutChunk(received);
 				}
 
 			}
 
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		// s.leaveGroup(InetAddress.getByName(BackupServer.mdb_address));
@@ -64,7 +63,7 @@ public class MDBListener implements Runnable {
 		return data;
 	}
 
-	private void handlePutChunk(Message received, InetAddress origin) {
+	private void handlePutChunk(Message received) {
 		MessagePutChunk mpc = (MessagePutChunk) received;
 		DataChunk dc = new DataChunk(mpc.getFileId(), mpc.getChunkNo(),
 				mpc.getBody(), mpc.getBody().length);
@@ -77,6 +76,7 @@ public class MDBListener implements Runnable {
 				}
 			});
 		}
+
 		(new Thread(new StoredSender(received.getFileId(),
 				received.getChunkNo()))).start();
 

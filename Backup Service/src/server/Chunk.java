@@ -1,8 +1,7 @@
 package server;
 
 import java.io.Serializable;
-import java.net.InetAddress;
-import java.util.Vector;
+import java.util.HashSet;
 
 public class Chunk implements Serializable {
 
@@ -10,17 +9,15 @@ public class Chunk implements Serializable {
 	String fileId;
 	int chunkNo;
 	public int desiredDegree;
-	public int actualDegree;
-	public Vector<String> origins;
+	public HashSet<String> origins;
 	protected int size;
 
 	public Chunk(String fileId, int chunkNo, int size) {
 		this.fileId = fileId;
 		this.chunkNo = chunkNo;
 		desiredDegree = 0;
-		actualDegree = 0;
-		origins = new Vector<String>();
 		this.size = size;
+		origins = new HashSet<String>();
 
 	}
 
@@ -34,7 +31,7 @@ public class Chunk implements Serializable {
 
 		return "FiledID: " + fileId + "\n" + "ChunkNo: " + chunkNo + "\n"
 				+ "Desired Degree: " + desiredDegree + "\n" + "Actual Degree: "
-				+ actualDegree + "\n" + "Size: " + size + "\n";
+				+ origins.size() + "\n" + "Size: " + size + "\n";
 
 	}
 
@@ -48,17 +45,26 @@ public class Chunk implements Serializable {
 		return chunkNo;
 	}
 
-	public Vector<String> getOrigins() {
-		return origins;
-	}
-
-	public void addOrigin(InetAddress origin) {
-		origins.add(origin.getCanonicalHostName());
-	}
-
 	public int getSize() {
 
 		return this.size;
+	}
+
+	@SuppressWarnings("unchecked")
+	public void setOrigins(HashSet<String> origin) {
+		this.origins = (HashSet<String>) origin.clone();
+	}
+
+	public HashSet<String> getOrigins() {
+		return this.origins;
+	}
+
+	public synchronized boolean incrementDegree(String origin) {
+		return origins.add(origin);
+	}
+
+	public synchronized int getActualDegree() {
+		return origins.size();
 	}
 
 }

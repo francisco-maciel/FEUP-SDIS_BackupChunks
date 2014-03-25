@@ -14,12 +14,12 @@ import java.util.Vector;
 
 public class ChunkedFile {
 
-	String path;
-	String fileName;
+	public String path;
+	public String fileName;
 	String preCryptName;
 	String cryptName;
 	Vector<DataChunk> data;
-	int size;
+	public int size;
 	public static final int CHUNK_SIZE = 64 * 1000;
 
 	public ChunkedFile() {

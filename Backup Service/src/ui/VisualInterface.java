@@ -54,7 +54,6 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	private JTextField nameField;
 	private JTextField pathField;
 	private JTextField sizeField;
-	private JTextField replicationField;
 	private JTextField desiredField;
 	JButton restoreButton;
 	private JTextField degreeField;
@@ -186,12 +185,12 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(null, "Detailed File Info",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel_1.setBounds(680, 43, 226, 243);
+		panel_1.setBounds(680, 43, 226, 210);
 		frmBackupService.getContentPane().add(panel_1);
 		panel_1.setLayout(null);
 
 		Panel panel = new Panel();
-		panel.setBounds(6, 16, 214, 216);
+		panel.setBounds(6, 16, 214, 188);
 		panel_1.add(panel);
 		panel.setLayout(null);
 
@@ -211,12 +210,8 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		lblBytes.setBounds(158, 106, 46, 14);
 		panel.add(lblBytes);
 
-		JLabel lblReplicationDegree = new JLabel("Replication Degree");
-		lblReplicationDegree.setBounds(58, 135, 111, 14);
-		panel.add(lblReplicationDegree);
-
 		JLabel lblDesiredDegree = new JLabel("Desired Degree");
-		lblDesiredDegree.setBounds(68, 163, 89, 14);
+		lblDesiredDegree.setBounds(58, 134, 89, 14);
 		panel.add(lblDesiredDegree);
 
 		nameField = new JTextField();
@@ -250,20 +245,14 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		sizeField.setBounds(48, 103, 100, 20);
 		panel.add(sizeField);
 
-		replicationField = new JTextField();
-		replicationField.setEditable(false);
-		replicationField.setColumns(10);
-		replicationField.setBounds(157, 132, 36, 20);
-		panel.add(replicationField);
-
 		desiredField = new JTextField();
 		desiredField.setEditable(false);
 		desiredField.setColumns(10);
-		desiredField.setBounds(157, 160, 36, 20);
+		desiredField.setBounds(140, 131, 36, 20);
 		panel.add(desiredField);
 
 		restoreButton = new JButton("Restore");
-		restoreButton.setBounds(115, 188, 89, 23);
+		restoreButton.setBounds(115, 159, 89, 23);
 		panel.add(restoreButton);
 		restoreButton.setEnabled(false);
 
@@ -286,14 +275,15 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 				frmBackupService.requestFocusInWindow();
 			}
 		});
+		slider.setLabelTable(slider.createStandardLabels(10));
 		slider.setSnapToTicks(true);
 		slider.setPaintTicks(true);
 		slider.setMajorTickSpacing(1);
-		slider.setValue(3);
+		slider.setValue(BackupServer.DEFAULT_REP_VALUE);
 		slider.setMinorTickSpacing(1);
 		slider.setMinimum(1);
 		slider.setMaximum(10);
-		slider.setBounds(10, 385, 141, 36);
+		slider.setBounds(10, 385, 141, 75);
 		frmBackupService.getContentPane().add(slider);
 
 		degreeField.setEditable(false);
@@ -304,7 +294,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		JPanel panel_3 = new JPanel();
 		panel_3.setBorder(new TitledBorder(null, "Chunk Info",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel_3.setBounds(680, 294, 226, 170);
+		panel_3.setBounds(690, 264, 226, 170);
 		frmBackupService.getContentPane().add(panel_3);
 		panel_3.setLayout(null);
 
@@ -506,7 +496,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 			FileInfo file = FilesRecord.getFilesRecord().getFileInfo(
 					selectedNode);
 			setDetailedText(file.getName(), file.getPath(), file.getSize(),
-					file.getReplicationDegree(), file.getDesiredDegree());
+					file.getDesiredDegree());
 		}
 	}
 
@@ -519,7 +509,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 					Chunk chunk = ChunksRecord.getChunksRecord().getChunks()
 							.get(i);
 					setDetailedChunk(chunk.getName(), chunk.getNo(),
-							chunk.getSize(), chunk.actualDegree,
+							chunk.getSize(), chunk.getActualDegree(),
 							chunk.desiredDegree);
 
 				}
@@ -547,7 +537,6 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		nameField.setText("");
 		pathField.setText("");
 		sizeField.setText("");
-		replicationField.setText("");
 		desiredField.setText("");
 	}
 
@@ -560,18 +549,14 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 
 	}
 
-	private void setDetailedText(String name, String path, int size, int replicationDegree, int desiredDegree) {
+	private void setDetailedText(String name, String path, int size, int desiredDegree) {
 		nameField.setText(name);
 		nameField.setCaretPosition(0);
 		pathField.setText(path);
 		pathField.setCaretPosition(0);
 		sizeField.setText(size + "");
 		sizeField.setCaretPosition(0);
-		replicationField.setText(replicationDegree + "");
 		desiredField.setText(desiredDegree + "");
-		if (replicationDegree < desiredDegree)
-			replicationField.setForeground(Color.RED);
-		else
-			replicationField.setForeground(Color.BLACK);
+
 	}
 }

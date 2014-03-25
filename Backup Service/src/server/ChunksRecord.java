@@ -12,7 +12,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.util.Vector;
 
 import utils.Debug;
@@ -83,7 +82,6 @@ public class ChunksRecord {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public synchronized boolean addChunk(DataChunk newC) {
 		// TODO if chunk does not exists and ERROR throw exeption. if chunk
 		// exists just return false
@@ -104,9 +102,8 @@ public class ChunksRecord {
 			e.printStackTrace();
 		}
 		Chunk c = new Chunk(newC.getName(), newC.getNo(), newC.getSize());
-		c.actualDegree = newC.actualDegree;
+		c.setOrigins(newC.getOrigins());
 		c.desiredDegree = newC.desiredDegree;
-		c.origins = (Vector<String>) newC.origins.clone();
 
 		chunks.add(c);
 
@@ -158,17 +155,16 @@ public class ChunksRecord {
 		return chunks;
 	}
 
-	public synchronized boolean incrementChunkValue(String fileId, InetAddress inetAddress, int chunkNo) {
+	public synchronized boolean incrementChunkValue(String fileId, String origin, int chunkNo) {
 		try {
 			int index = getChunkIndex(fileId, chunkNo);
 			if (index != -1) {
-				if (!chunks.get(index).getOrigins()
-						.contains(inetAddress.getCanonicalHostName())) {
-					chunks.get(index).addOrigin(inetAddress);
-					chunks.get(index).actualDegree++;
+
+				if (chunks.get(index).incrementDegree(origin)) {
 					updateRecordFile();
 					return true;
 				}
+				return false;
 			}
 		} catch (Exception e) {
 			return false;
@@ -185,4 +181,5 @@ public class ChunksRecord {
 
 		return -1;
 	}
+
 }

@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import server.BackupServer;
 import server.DataChunk;
@@ -19,16 +20,19 @@ public class BackupChunk extends Thread {
 	int desiredDegree;
 	int timeout;
 	int timoutCounter;
-	HashSet<InetAddress> repplies;
+	HashSet<String> repplies;
 	MulticastSocket sendServer;
 	DatagramPacket packet;
+	AtomicBoolean result;
 
-	public BackupChunk(DataChunk chunk, int degree) {
-		repplies = new HashSet<InetAddress>();
+	public BackupChunk(DataChunk chunk, int degree, AtomicBoolean result) {
+		repplies = new HashSet<String>();
 		this.chunk = chunk;
 		desiredDegree = degree;
 		timeout = 500;
 		timoutCounter = 0;
+		this.result = result;
+		this.result.set(false);
 	}
 
 	@Override
@@ -43,7 +47,7 @@ public class BackupChunk extends Thread {
 			String message = new MessagePutChunk(chunk.getName(),
 					chunk.getNo(), chunk.getData(), desiredDegree).toMessage();
 
-			MulticastSocket server = new MulticastSocket(BackupServer.mdb_port);
+			MulticastSocket server = new MulticastSocket();
 			byte buf[] = message.getBytes();
 
 			DatagramPacket pack = new DatagramPacket(buf, buf.length,
@@ -71,8 +75,6 @@ public class BackupChunk extends Thread {
 			byte buf[] = new byte[1024 * 64];
 			DatagramPacket pack = new DatagramPacket(buf, buf.length);
 
-			(new Sleep(200)).go();
-
 			long oldTime = (new java.util.Date()).getTime();
 
 			sendServer.send(packet);
@@ -97,11 +99,10 @@ public class BackupChunk extends Thread {
 								&& received.getFileId().equals(name)
 								&& received.getChunkNo() == no) {
 
-							repplies.add(pack.getAddress());
-							// System.out.println("BCK:GOT " +
-							// received.getType());
+							repplies.add(pack.getAddress().toString());
 
 							if (repplies.size() >= desiredDegree) {
+								result.set(true);
 								break;
 							}
 						}
@@ -115,8 +116,6 @@ public class BackupChunk extends Thread {
 						s.close();
 						return;
 					}
-
-					(new Sleep(200)).go();
 
 					timeout = timeout * 2;
 					oldTime = (new java.util.Date()).getTime();

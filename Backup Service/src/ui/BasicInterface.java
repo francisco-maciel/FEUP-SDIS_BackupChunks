@@ -9,12 +9,12 @@ import utils.Debug;
 
 public class BasicInterface {
 
-	public static final String MC_ADDRESS = "225.0.1.1";
-	public static final int MC_PORT = 5601;
-	public static final String MDB_ADDRESS = "225.0.1.2";
-	public static final int MDB_PORT = 5602;
-	public static final String MDR_ADDRESS = "225.0.1.3";
-	public static final int MDR_PORT = 5603;
+	public static final String MC_ADDRESS = "239.0.0.1";
+	public static final int MC_PORT = 8765;
+	public static final String MDB_ADDRESS = "239.0.0.1";
+	public static final int MDB_PORT = 8766;
+	public static final String MDR_ADDRESS = "239.0.0.1";
+	public static final int MDR_PORT = 8767;
 
 	public static void main(String args[]) {
 		BackupServer bck = initServerWithArguments(args);

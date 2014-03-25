@@ -76,12 +76,11 @@ public class FilesRecord {
 
 	public boolean addFile(FileInfo dc) {
 		return addFile(dc.getName(), dc.getPath(), dc.getSize(),
-				dc.getReplicationDegree(), dc.getDesiredDegree());
+				dc.getDesiredDegree());
 	}
 
-	public boolean addFile(String fileName, String path, int size, int replicationDegree, int desiredDegree) {
-		FileInfo newFile = new FileInfo(fileName, path, size,
-				replicationDegree, desiredDegree);
+	public boolean addFile(String fileName, String path, int size, int desiredDegree) {
+		FileInfo newFile = new FileInfo(fileName, path, size, desiredDegree);
 
 		boolean found = false;
 
@@ -89,7 +88,6 @@ public class FilesRecord {
 			if (f.getName().equals(newFile.getName())) {
 				found = true;
 				f.setDesiredDegree(desiredDegree);
-				f.setReplicationDegree(replicationDegree);
 				f.setPath(path);
 				f.setSize(size);
 			}

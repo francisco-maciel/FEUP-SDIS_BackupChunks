@@ -8,17 +8,14 @@ public class FileInfo implements Serializable {
 	String name;
 	String path;
 	int size;
-	int replicationDegree;
 	int desiredDegree;
 
 	// TODO data modificacao
-	public FileInfo(String name, String path, int size, int replicationDegree,
-			int desiredDegree) {
+	public FileInfo(String name, String path, int size, int desiredDegree) {
 		this.name = name;
 		this.size = size;
 		this.path = path;
 		this.desiredDegree = desiredDegree;
-		this.replicationDegree = replicationDegree;
 	}
 
 	public void setName(String name) {
@@ -43,14 +40,6 @@ public class FileInfo implements Serializable {
 
 	public int getSize() {
 		return size;
-	}
-
-	public void setReplicationDegree(int deg) {
-		this.replicationDegree = deg;
-	}
-
-	public int getReplicationDegree() {
-		return replicationDegree;
 	}
 
 	public void setDesiredDegree(int deg) {

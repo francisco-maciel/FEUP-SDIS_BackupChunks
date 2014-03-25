@@ -10,6 +10,7 @@ import ui.BackupListener;
 
 public class BackupServer {
 
+	public static final int DEFAULT_REP_VALUE = 1;
 	public static String mc_address, mdb_address, mdr_address;
 	public static int mc_port, mdb_port, mdr_port;
 
@@ -46,14 +47,9 @@ public class BackupServer {
 		ChunkedFile chunkedFile = new ChunkedFile();
 		if (!chunkedFile.loadFile(file))
 			return false;
-
 		ChunkBackupProtocolInitiator backup = new ChunkBackupProtocolInitiator(
 				chunkedFile, degree);
 		new Thread(backup).start();
-
-		files.addFile(new FileInfo(chunkedFile.fileName, chunkedFile.path,
-				chunkedFile.size, 0, degree));
-
 		updateVisuals();
 
 		return true;

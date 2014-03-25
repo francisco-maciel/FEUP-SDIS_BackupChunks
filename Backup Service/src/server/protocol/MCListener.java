@@ -43,7 +43,7 @@ public class MCListener implements Runnable {
 				if (received != null) {
 					System.out.println("MC : GOT " + received.getType());
 					if (received.getType().equals(MessageType.STORED))
-						handleStored(received, pack.getAddress());
+						handleStored(received, pack.getAddress().toString());
 
 				}
 
@@ -64,9 +64,9 @@ public class MCListener implements Runnable {
 		return data;
 	}
 
-	private void handleStored(Message received, InetAddress inetAddress) {
+	private void handleStored(Message received, String origin) {
 		if (ChunksRecord.getChunksRecord().incrementChunkValue(
-				received.getFileId(), inetAddress, received.getChunkNo())) {
+				received.getFileId(), origin, received.getChunkNo())) {
 			java.awt.EventQueue.invokeLater(new Runnable() {
 				public void run() {
 					bs.updateVisuals();

@@ -26,7 +26,7 @@ public class StoredSender implements Runnable {
 			String message = new MessageStored(name, no).toMessage();
 
 			@SuppressWarnings("resource")
-			MulticastSocket server = new MulticastSocket(BackupServer.mc_port);
+			MulticastSocket server = new MulticastSocket();
 			byte buf[] = message.getBytes();
 
 			DatagramPacket pack = new DatagramPacket(buf, message.length(),
