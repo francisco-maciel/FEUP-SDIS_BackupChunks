@@ -55,10 +55,35 @@ public class ChunkRestoreProtocolInitiator implements Runnable {
 
 			for (int i = 0; i < file.getNumChunks(); i++) {
 				(new GetChunkSender(file.getCryptedName(), i)).run();
-
+				int once = 0;
 				while (true) {
+					socket.setSoTimeout(1200);
+					String data = null;
+					try {
+						data = listenForMessage(socket, pack);
+					} catch (IOException e) {
+						if (e instanceof java.net.SocketTimeoutException) {
+							if (once == 2) {
+								JOptionPane
+										.showMessageDialog(
+												null,
+												"The file "
+														+ file.getName()
+														+ " could not be restored! Missing chunk: "
+														+ i,
+												"File Restore Failed!",
+												JOptionPane.WARNING_MESSAGE);
+								l.setEnabledButtons(true);
 
-					String data = listenForMessage(socket, pack);
+								return;
+							} else {
+								once++;
+								(new GetChunkSender(file.getCryptedName(), i))
+										.run();
+
+							}
+						}
+					}
 
 					Message received = null;
 					try {
