@@ -148,4 +148,8 @@ public class ChunkedFile {
 	public int getNChunks() {
 		return data.size();
 	}
+
+	public String getCryptName() {
+		return cryptName;
+	}
 }

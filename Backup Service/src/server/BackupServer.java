@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Vector;
 
 import server.protocol.ChunkBackupProtocolInitiator;
+import server.protocol.ChunkRestoreProtocolInitiator;
 import server.protocol.MCListener;
 import server.protocol.MDBListener;
 import ui.BackupListener;
@@ -48,7 +49,7 @@ public class BackupServer {
 		if (!chunkedFile.loadFile(file))
 			return false;
 		ChunkBackupProtocolInitiator backup = new ChunkBackupProtocolInitiator(
-				chunkedFile, degree);
+				chunkedFile, degree, listener);
 		new Thread(backup).start();
 		updateVisuals();
 
@@ -74,6 +75,10 @@ public class BackupServer {
 
 	}
 
+	public BackupListener getListener() {
+		return listener;
+	}
+
 	public void deleteData() {
 		record.deleteData();
 		if (listener != null)
@@ -84,6 +89,19 @@ public class BackupServer {
 	public FilesRecord getFilesRecord() {
 
 		return files;
+	}
+
+	public void restoreFile(String chunkName) {
+		FileInfo file = null;
+		for (int i = 0; i < files.getNumberFiles(); i++) {
+			if (files.getFiles().get(i).getName().equals(chunkName))
+				file = files.getFiles().get(i);
+		}
+		ChunkRestoreProtocolInitiator restore = new ChunkRestoreProtocolInitiator(
+				file);
+		new Thread(restore).start();
+		updateVisuals();
+
 	}
 
 }

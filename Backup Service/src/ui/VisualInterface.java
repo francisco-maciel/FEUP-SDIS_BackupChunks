@@ -18,6 +18,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
@@ -62,6 +63,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	private JTextField chunkSizeField;
 	private JTextField replicationDegreeField;
 	private JTextField DesiredDegreeField;
+	private JProgressBar progressBar;
 
 	/**
 	 * Launch the application.
@@ -252,6 +254,11 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		panel.add(desiredField);
 
 		restoreButton = new JButton("Restore");
+		restoreButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				server.restoreFile(selectedNode);
+			}
+		});
 		restoreButton.setBounds(115, 159, 89, 23);
 		panel.add(restoreButton);
 		restoreButton.setEnabled(false);
@@ -356,6 +363,11 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		DesiredDegreeField.setColumns(10);
 		DesiredDegreeField.setBounds(139, 114, 36, 20);
 		panel_2.add(DesiredDegreeField);
+
+		progressBar = new JProgressBar();
+		progressBar.setBounds(109, 331, 416, 23);
+		progressBar.setForeground(new Color(51, 153, 255));
+		frmBackupService.getContentPane().add(progressBar);
 		frmBackupService.setLocationRelativeTo(null);
 	}
 
@@ -558,5 +570,11 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		sizeField.setCaretPosition(0);
 		desiredField.setText(desiredDegree + "");
 
+	}
+
+	@Override
+	public void updateProgressBar(int value) {
+		progressBar.setValue(value);
+		progressBar.repaint();
 	}
 }

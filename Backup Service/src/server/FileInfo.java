@@ -9,13 +9,16 @@ public class FileInfo implements Serializable {
 	String path;
 	int size;
 	int desiredDegree;
+	public String cryptedName;
 
 	// TODO data modificacao
-	public FileInfo(String name, String path, int size, int desiredDegree) {
+	public FileInfo(String name, String path, int size, int desiredDegree,
+			String crypt) {
 		this.name = name;
 		this.size = size;
 		this.path = path;
 		this.desiredDegree = desiredDegree;
+		this.cryptedName = crypt;
 	}
 
 	public void setName(String name) {
@@ -42,6 +45,14 @@ public class FileInfo implements Serializable {
 		return size;
 	}
 
+	public int getNumChunks() {
+		int n = (int) Math.ceil(size / 64000.0);
+
+		if (size % 64000 == 0)
+			n += 1;
+		return n;
+	}
+
 	public void setDesiredDegree(int deg) {
 		this.desiredDegree = deg;
 	}
@@ -53,5 +64,9 @@ public class FileInfo implements Serializable {
 	public String toString() {
 		return name;
 
+	}
+
+	public String getCryptedName() {
+		return cryptedName;
 	}
 }

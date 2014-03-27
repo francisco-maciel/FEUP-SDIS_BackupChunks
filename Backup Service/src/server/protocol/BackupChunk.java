@@ -48,7 +48,7 @@ public class BackupChunk extends Thread {
 					chunk.getNo(), chunk.getData(), desiredDegree).toMessage();
 
 			MulticastSocket server = new MulticastSocket();
-			byte buf[] = message.getBytes();
+			byte buf[] = message.getBytes("ISO-8859-1");
 
 			DatagramPacket pack = new DatagramPacket(buf, buf.length,
 					InetAddress.getByName(BackupServer.mdb_address),
@@ -87,7 +87,7 @@ public class BackupChunk extends Thread {
 					s.receive(pack);
 
 					String data = new String(Arrays.copyOf(pack.getData(),
-							pack.getLength()));
+							pack.getLength()), "ISO-8859-1");
 
 					Message received = null;
 					try {

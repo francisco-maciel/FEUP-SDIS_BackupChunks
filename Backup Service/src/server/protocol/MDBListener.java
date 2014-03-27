@@ -59,7 +59,7 @@ public class MDBListener implements Runnable {
 	private String listenForMessage(MulticastSocket s, DatagramPacket pack) throws IOException {
 		s.receive(pack);
 		String data = new String(
-				Arrays.copyOf(pack.getData(), pack.getLength()));
+				Arrays.copyOf(pack.getData(), pack.getLength()), "ISO-8859-1");
 		return data;
 	}
 

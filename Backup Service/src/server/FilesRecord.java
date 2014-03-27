@@ -76,11 +76,12 @@ public class FilesRecord {
 
 	public boolean addFile(FileInfo dc) {
 		return addFile(dc.getName(), dc.getPath(), dc.getSize(),
-				dc.getDesiredDegree());
+				dc.getDesiredDegree(), dc.cryptedName);
 	}
 
-	public boolean addFile(String fileName, String path, int size, int desiredDegree) {
-		FileInfo newFile = new FileInfo(fileName, path, size, desiredDegree);
+	public boolean addFile(String fileName, String path, int size, int desiredDegree, String crypt) {
+		FileInfo newFile = new FileInfo(fileName, path, size, desiredDegree,
+				crypt);
 
 		boolean found = false;
 

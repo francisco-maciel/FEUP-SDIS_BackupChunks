@@ -2,10 +2,10 @@ package server.protocol;
 
 import java.util.Random;
 
-public class Sleep {
+public class RandomSleep {
 	int time;
 
-	public Sleep(int time) {
+	public RandomSleep(int time) {
 		this.time = time;
 	}
 

@@ -7,7 +7,9 @@ import java.net.MulticastSocket;
 import java.util.Arrays;
 
 import server.BackupServer;
+import server.Chunk;
 import server.ChunksRecord;
+import server.DataChunk;
 import server.messages.Message;
 import server.messages.MessageType;
 import server.messages.UnrecognizedMessageException;
@@ -44,23 +46,34 @@ public class MCListener implements Runnable {
 					System.out.println("MC : GOT " + received.getType());
 					if (received.getType().equals(MessageType.STORED))
 						handleStored(received, pack.getAddress().toString());
-
+					else if (received.getType().equals(MessageType.GETCHUNK))
+						handleGetChunk(received);
 				}
 
 			}
 
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		// s.leaveGroup(InetAddress.getByName(BackupServer.mc_address));
 		// s.close();
 	}
 
+	private void handleGetChunk(Message received) {
+		int index = bs.getRecord().getChunkIndex(received.getFileId(),
+				received.getChunkNo());
+		if (index != -1) {
+			Chunk c = bs.getRecord().getChunks().get(index);
+			DataChunk dc = c.getDataChunk();
+			(new ChunkSender(dc)).run();
+
+		}
+	}
+
 	private String listenForMessage(MulticastSocket s, DatagramPacket pack) throws IOException {
 		s.receive(pack);
 		String data = new String(
-				Arrays.copyOf(pack.getData(), pack.getLength()));
+				Arrays.copyOf(pack.getData(), pack.getLength()), "ISO-8859-1");
 		return data;
 	}
 

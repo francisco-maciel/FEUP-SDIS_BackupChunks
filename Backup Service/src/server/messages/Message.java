@@ -2,10 +2,11 @@ package server.messages;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
 import server.Version;
@@ -76,73 +77,104 @@ public abstract class Message {
 
 	private static Message parseHead(String message) throws UnrecognizedMessageException {
 		Message parsed = null;
-		int lineIndex = 0;
-		HashMap<MessageType, Integer> wordsByType = new HashMap<MessageType, Integer>();
-		fillHash(wordsByType);
-
-		// parse header
-		InputStream is = new ByteArrayInputStream(message.getBytes());
-		BufferedReader br = new BufferedReader(new InputStreamReader(is));
-
-		String line = "";
 		try {
-			while ((line = br.readLine()) != null) {
-				if (line.length() == 0)
-					break; // empty line end header
 
-				// Traditional recognized line
-				if (lineIndex == 0) {
+			int lineIndex = 0;
+			HashMap<MessageType, Integer> wordsByType = new HashMap<MessageType, Integer>();
+			fillHash(wordsByType);
 
-					String[] words = line.split(" ");
-					if (words.length < 2)
-						return null;
+			// parse header
+			InputStream is;
 
-					MessageType type = getMessageType(words[0]);
-					if (words.length != wordsByType.get(type))
-						return null;
+			is = new ByteArrayInputStream(message.getBytes("ISO-8859-1"));
 
-					parsed = generateMessageHeader(type, words);
+			BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
-				}
-				// else ignored
+			String line = "";
+			try {
+				while ((line = br.readLine()) != null) {
+					if (line.length() == 0)
+						break; // empty line end header
 
-				lineIndex++;
-			}
-			if (line == null)
-				return null;
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+					// Traditional recognized line
+					if (lineIndex == 0) {
 
-		if (lineIndex < 1)
-			return null; // less than 1 line, not even header
-		else {
-			if (parsed.type.equals(MessageType.PUTCHUNK)
-					|| parsed.type.equals(MessageType.CHUNK)) {
+						String[] words = line.split(" ");
+						if (words.length < 2)
+							return null;
 
-				try {
-					int size = 0;
+						MessageType type = getMessageType(words[0]);
+						if (words.length != wordsByType.get(type))
+							return null;
 
-					char[] buf = new char[1000 * 64 + 1];
-					int read = 0;
-					int newchars = 0;
-					boolean hasBody = false;
-					while ((newchars = br.read(buf)) != -1) {
-						hasBody = true;
-						read += newchars;
+						parsed = generateMessageHeader(type, words);
+
 					}
-					String fullBody = new String(Arrays.copyOf(buf, read));
+					// else ignored
 
-					parsed.setBody(fullBody.getBytes());
-
-				} catch (IOException e) {
-					e.printStackTrace();
+					lineIndex++;
 				}
-
+				if (line == null)
+					return null;
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 
-			return parsed;
+			if (lineIndex < 1)
+				return null; // less than 1 line, not even header
+			else {
+				if (parsed.type.equals(MessageType.PUTCHUNK)
+						|| parsed.type.equals(MessageType.CHUNK)) {
+
+					try {
+						InputStream is2 = new ByteArrayInputStream(
+								message.getBytes("ISO-8859-1"));
+
+						int state = 0;
+						while (true) {
+							byte[] reader = new byte[2];
+							int result = is2.read(reader, 0, 1);
+							if (result == -1)
+								break;
+							if (reader[0] == 0xD && state == 0)
+								state = 1;
+							else if (reader[0] == 0xA && state == 1)
+								state = 2;
+							else if (reader[0] == 0xD && state == 2)
+								state = 3;
+							else if (reader[0] == 0xA && state == 3)
+								state = 4;
+							else
+								state = 0;
+							if (state == 4)
+								break;
+						}
+
+						ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+						byte[] buf = new byte[1000 * 64 + 1];
+						int read = 0;
+						int newchars = 0;
+						while ((newchars = is2.read(buf)) != -1) {
+							buffer.write(buf, 0, newchars);
+							read += newchars;
+						}
+
+						String fullBody = new String(buffer.toByteArray(),
+								"ISO-8859-1");
+
+						parsed.setBody(fullBody.getBytes("ISO-8859-1"));
+
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+
+				}
+			}
+		} catch (UnsupportedEncodingException e1) {
+			e1.printStackTrace();
 		}
+		return parsed;
 	}
 
 	public abstract void setBody(byte[] bytes);

@@ -1,6 +1,11 @@
 package server;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashSet;
 
 public class Chunk implements Serializable {
@@ -67,4 +72,26 @@ public class Chunk implements Serializable {
 		return origins.size();
 	}
 
+	public DataChunk getDataChunk() {
+		DataChunk result = null;
+
+		File f = new File("data" + File.separator + "chunks" + File.separator
+				+ getChunkFileName());
+
+		if (f.exists() && !f.isDirectory()) {
+			try {
+				InputStream file = new FileInputStream(f);
+
+				byte[] data = new byte[64000];
+				int read = file.read(data);
+				byte[] body = Arrays.copyOf(data, read);
+				file.close();
+				result = new DataChunk(fileId, chunkNo, body, read);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
+		return result;
+	}
 }

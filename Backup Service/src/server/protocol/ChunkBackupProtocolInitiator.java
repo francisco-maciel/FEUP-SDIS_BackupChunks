@@ -7,19 +7,26 @@ import javax.swing.JOptionPane;
 import server.ChunkedFile;
 import server.FileInfo;
 import server.FilesRecord;
+import ui.BackupListener;
 
 public class ChunkBackupProtocolInitiator implements Runnable {
 	ChunkedFile file;
 	int desiredDegree;
+	BackupListener listener;
 
-	public ChunkBackupProtocolInitiator(ChunkedFile file, int degree) {
+	public ChunkBackupProtocolInitiator(ChunkedFile file, int degree,
+			BackupListener listener) {
 		this.file = file;
 		desiredDegree = degree;
+		this.listener = listener;
 	}
 
 	@Override
 	public void run() {
 		boolean result = true;
+		int j = 0;
+		listener.updateProgressBar(0);
+
 		for (int i = 0; i < file.getNChunks(); i += 3) {
 			AtomicBoolean resultA = new AtomicBoolean(true);
 			AtomicBoolean resultB = new AtomicBoolean(true);
@@ -52,11 +59,20 @@ public class ChunkBackupProtocolInitiator implements Runnable {
 					tC.join();
 
 				if (!resultA.get() || !resultB.get() || !resultC.get()) {
+					j++;
 					result = false;
 					break;
 				}
-				System.out.println(resultA.toString() + resultB.toString()
-						+ resultC.toString());
+				j++;
+				listener.updateProgressBar(100 * j / file.getNChunks());
+				if (tB != null) {
+					j++;
+					listener.updateProgressBar(100 * j / file.getNChunks());
+				}
+				if (tC != null) {
+					j++;
+					listener.updateProgressBar(100 * j / file.getNChunks());
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -66,10 +82,17 @@ public class ChunkBackupProtocolInitiator implements Runnable {
 		if (result) {
 			FilesRecord.getFilesRecord().addFile(
 					new FileInfo(file.fileName, file.path, file.size,
-							desiredDegree));
+							desiredDegree, file.getCryptName()));
+
+			JOptionPane.showMessageDialog(null, "The file " + file.fileName
+					+ " backup up successfully", "File backup completed",
+					JOptionPane.INFORMATION_MESSAGE);
+
 			System.out.println("FILE BACKUP COMPELTE");
 		} else {
 			// TODO remove chunks already backed
+			listener.updateProgressBar(0);
+
 			JOptionPane.showMessageDialog(null, "The file " + file.fileName
 					+ " failed to backup correctly", "File backup failed",
 					JOptionPane.WARNING_MESSAGE);

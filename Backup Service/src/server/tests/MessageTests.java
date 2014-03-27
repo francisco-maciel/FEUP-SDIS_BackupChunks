@@ -5,6 +5,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+
 import org.junit.Test;
 
 import server.Version;
@@ -89,26 +92,35 @@ public class MessageTests {
 
 	@Test
 	public void testMessagePutChunk() {
-		String message = "PUTCHUNK " + Version.get()
-				+ " chunkName 0 10\r\n\r\nbody\n\nbody\n";
-		Message m = new MessagePutChunk("chunkName", 0, new String(
-				"body\n\nbody\n").getBytes(), 10);
-		assertEquals(message, m.toMessage());
-
 		try {
-			Message parsed = Message.parse(message);
-			assertNotNull(parsed);
-			assertTrue(parsed instanceof MessagePutChunk);
-			MessagePutChunk mc = (MessagePutChunk) parsed;
-			assertEquals(mc.getChunkNo(), 0);
-			assertEquals(mc.getFileId(), "chunkName");
-			assertEquals(mc.getVersion(), Version.get());
-			assertEquals(new String(mc.getBody()), "body\n\nbody\n");
+			String message = new String(
+					("PUTCHUNK " + Version.get() + " chunkName 0 10\r\n\r\nbody\n\nbodyš\n")
+							.getBytes("ISO-8859-1"), "ISO-8859-1");
 
-		} catch (UnrecognizedMessageException e) {
-			fail("Unrecognized message received");
+			Message m;
+
+			m = new MessagePutChunk("chunkName", 0,
+					"body\n\nbodyš\n".getBytes("ISO-8859-1"), 10);
+
+			assertEquals(message, m.toMessage());
+			try {
+				Message parsed = Message.parse(m.toMessage());
+				assertNotNull(parsed);
+				assertTrue(parsed instanceof MessagePutChunk);
+				MessagePutChunk mc = (MessagePutChunk) parsed;
+				assertEquals(mc.getChunkNo(), 0);
+				assertEquals(mc.getFileId(), "chunkName");
+				assertEquals(mc.getVersion(), Version.get());
+				assertTrue(Arrays.equals(
+						"body\n\nbodyš\n".getBytes("ISO-8859-1"),
+						((MessagePutChunk) parsed).getBody()));
+
+			} catch (UnrecognizedMessageException e) {
+				fail("Unrecognized message received");
+			}
+		} catch (UnsupportedEncodingException e1) {
+			e1.printStackTrace();
 		}
-
 	}
 
 	@Test

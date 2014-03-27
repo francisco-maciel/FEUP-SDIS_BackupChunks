@@ -1,5 +1,7 @@
 package server.messages;
 
+import java.io.UnsupportedEncodingException;
+
 import server.Version;
 
 public class MessagePutChunk extends Message {
@@ -18,6 +20,7 @@ public class MessagePutChunk extends Message {
 		this.type = MessageType.PUTCHUNK;
 		this.body = body;
 		this.replicationDeg = replicationDeg;
+
 	}
 
 	@Override
@@ -35,7 +38,11 @@ public class MessagePutChunk extends Message {
 		message.append("\r\n");
 		// second line could go here
 		message.append("\r\n");
-		message.append(new String(body));
+		try {
+			message.append(new String(body, "ISO-8859-1"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
 
 		return message.toString();
 	}
