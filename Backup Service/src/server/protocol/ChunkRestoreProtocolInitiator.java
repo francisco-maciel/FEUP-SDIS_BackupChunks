@@ -24,21 +24,24 @@ import server.messages.Message;
 import server.messages.MessageChunk;
 import server.messages.MessageType;
 import server.messages.UnrecognizedMessageException;
+import ui.BackupListener;
 
 public class ChunkRestoreProtocolInitiator implements Runnable {
 	FileInfo file;
 	HashSet<Integer> chunkNos;
 	Vector<DataChunk> dc;
+	BackupListener l;
 
-	public ChunkRestoreProtocolInitiator(FileInfo file) {
+	public ChunkRestoreProtocolInitiator(FileInfo file, BackupListener l) {
 		this.file = file;
 		chunkNos = new HashSet<Integer>();
 		dc = new Vector<DataChunk>();
+		this.l = l;
 	}
 
 	@Override
 	public void run() {
-
+		l.setEnabledButtons(false);
 		MulticastSocket socket;
 		try {
 			socket = new MulticastSocket(BackupServer.mdr_port);
@@ -47,43 +50,46 @@ public class ChunkRestoreProtocolInitiator implements Runnable {
 
 			byte buf[] = new byte[1024 * 64];
 			DatagramPacket pack = new DatagramPacket(buf, buf.length);
-			int n = file.getNumChunks();
-			while (true) {
+			l.updateProgressBar(0);
+			// send all getChunks
 
-				// send all getChunks
-				(new GetChunksSender(file.getCryptedName(), file.getNumChunks()))
-						.run();
-				String data = listenForMessage(socket, pack);
+			for (int i = 0; i < file.getNumChunks(); i++) {
+				(new GetChunkSender(file.getCryptedName(), i)).run();
 
-				Message received = null;
-				try {
-					received = Message.parse(data);
-				} catch (UnrecognizedMessageException e) {
-					System.out.println("Ignored Message");
-				}
-				if (received != null) {
-					System.out.println("MDR: GOT " + received.getType());
-					if (received.getType().equals(MessageType.CHUNK)
-							&& received.getFileId().equals(
-									file.getCryptedName()))
-						if (processChunk((MessageChunk) received)) {
-							n--;
+				while (true) {
+
+					String data = listenForMessage(socket, pack);
+
+					Message received = null;
+					try {
+						received = Message.parse(data);
+					} catch (UnrecognizedMessageException e) {
+						System.out.println("Ignored Message");
+					}
+					if (received != null) {
+						System.out.println("MDR: GOT " + received.getType()
+								+ " " + received.getChunkNo());
+						if (received.getType().equals(MessageType.CHUNK)
+								&& received.getFileId().equals(
+										file.getCryptedName())
+								&& received.getChunkNo() == i) {
+							processChunk((MessageChunk) received);
+							break;
 						}
-					if (n == 0) {
-
-						finishSavingFile();
-
-						break;
 
 					}
 
 				}
+				l.updateProgressBar(100 * (i + 1) / file.getNumChunks());
 
 			}
 
+			finishSavingFile();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+		l.setEnabledButtons(true);
+
 	}
 
 	private void finishSavingFile() {
@@ -136,12 +142,10 @@ public class ChunkRestoreProtocolInitiator implements Runnable {
 	}
 
 	private boolean processChunk(MessageChunk received) {
-		if (chunkNos.add(received.getChunkNo())) {
-			dc.add(new DataChunk(received.getFileId(), received.getChunkNo(),
-					received.getBody(), received.getBody().length));
-			return true;
-		} else
-			return false;
+		dc.add(new DataChunk(received.getFileId(), received.getChunkNo(),
+				received.getBody(), received.getBody().length));
+		return true;
+
 	}
 
 	private String listenForMessage(MulticastSocket s, DatagramPacket pack) throws IOException {

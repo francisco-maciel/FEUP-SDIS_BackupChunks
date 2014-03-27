@@ -118,6 +118,38 @@ public class ChunksRecord {
 		updateRecordFile();
 	}
 
+	public synchronized boolean deleteChunk(Chunk newC) {
+		try {
+			File f = new File("data" + File.separator + "chunks"
+					+ File.separator + newC.getChunkFileName());
+			return f.delete();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
+	}
+
+	public synchronized boolean deleteChunksOfFile(String fileId) {
+
+		try {
+			for (int i = 0; i < chunks.size(); i++) {
+				if (chunks.get(i).getName().equals(fileId)) {
+					// DELETE CHUNK
+					deleteChunk(chunks.get(i));
+					chunks.remove(i);
+					i--;
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+
+	}
+
 	public static boolean deleteDirectory(File directory) {
 		// Codigo retirado de
 		// http://stackoverflow.com/questions/3775694/deleting-folder-from-java

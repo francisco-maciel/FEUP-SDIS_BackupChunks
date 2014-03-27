@@ -48,6 +48,8 @@ public class MCListener implements Runnable {
 						handleStored(received, pack.getAddress().toString());
 					else if (received.getType().equals(MessageType.GETCHUNK))
 						handleGetChunk(received);
+					else if (received.getType().equals(MessageType.DELETE))
+						handleDelete(received);
 				}
 
 			}
@@ -87,5 +89,16 @@ public class MCListener implements Runnable {
 			});
 		}
 
+	}
+
+	private void handleDelete(Message received) {
+		if (ChunksRecord.getChunksRecord().deleteChunksOfFile(
+				received.getFileId())) {
+			java.awt.EventQueue.invokeLater(new Runnable() {
+				public void run() {
+					bs.updateVisuals();
+				}
+			});
+		}
 	}
 }

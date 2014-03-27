@@ -31,6 +31,7 @@ public class BackupChunk extends Thread {
 		desiredDegree = degree;
 		timeout = 500;
 		timoutCounter = 0;
+
 		this.result = result;
 		this.result.set(false);
 	}
@@ -83,7 +84,7 @@ public class BackupChunk extends Thread {
 				try {
 					int diff = (int) ((new java.util.Date()).getTime() - oldTime);
 
-					s.setSoTimeout(Math.abs(timeout - diff));
+					s.setSoTimeout(Math.abs(timeout - diff) + 1);
 					s.receive(pack);
 
 					String data = new String(Arrays.copyOf(pack.getData(),

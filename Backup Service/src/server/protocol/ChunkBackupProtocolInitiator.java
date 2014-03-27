@@ -100,5 +100,7 @@ public class ChunkBackupProtocolInitiator implements Runnable {
 			System.out.println("FILE BACKUP FAILED");
 
 		}
+		listener.setEnabledButtons(true);
+
 	}
 }

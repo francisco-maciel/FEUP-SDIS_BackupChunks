@@ -11,4 +11,6 @@ public interface BackupListener {
 	public void updateFiles(Vector<FileInfo> chunks);
 
 	public void updateProgressBar(int value);
+
+	public void setEnabledButtons(boolean value);
 }

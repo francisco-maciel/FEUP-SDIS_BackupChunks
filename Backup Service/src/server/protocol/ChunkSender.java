@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import server.BackupServer;
 import server.DataChunk;
@@ -19,8 +20,9 @@ public class ChunkSender implements Runnable {
 
 	@Override
 	public void run() {
-		(new RandomSleep(400)).go();
-		// TODO dont send if received
+		if (checkChunkAlreadySent())
+			return;
+
 		try {
 			String message = new MessageChunk(chunk.getName(), chunk.getNo(),
 					chunk.getData()).toMessage();
@@ -40,5 +42,18 @@ public class ChunkSender implements Runnable {
 
 			e.printStackTrace();
 		}
+	}
+
+	private boolean checkChunkAlreadySent() {
+		AtomicBoolean result = new AtomicBoolean(false);
+		Thread t = (new ChunkListener(chunk.getName(), chunk.getNo(), result));
+		t.run();
+		try {
+			t.join();
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		return result.get();
+
 	}
 }

@@ -153,11 +153,9 @@ public abstract class Message {
 						ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
 						byte[] buf = new byte[1000 * 64 + 1];
-						int read = 0;
 						int newchars = 0;
 						while ((newchars = is2.read(buf)) != -1) {
 							buffer.write(buf, 0, newchars);
-							read += newchars;
 						}
 
 						String fullBody = new String(buffer.toByteArray(),

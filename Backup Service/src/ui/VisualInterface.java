@@ -57,6 +57,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	private JTextField sizeField;
 	private JTextField desiredField;
 	JButton restoreButton;
+	JButton backupButton;
 	private JTextField degreeField;
 	private JTextField fileIdField;
 	private JTextField chunkNoField;
@@ -64,16 +65,20 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	private JTextField replicationDegreeField;
 	private JTextField DesiredDegreeField;
 	private JProgressBar progressBar;
+	private boolean enableButtons;
 
 	/**
 	 * Launch the application.
 	 */
 	public static void main(final String[] args) {
+
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					UIManager
-							.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+					if (System.getProperty("os.name").contains("Windows")) {
+						UIManager
+								.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+					}
 				} catch (ClassNotFoundException | InstantiationException
 						| IllegalAccessException
 						| UnsupportedLookAndFeelException e1) {
@@ -106,11 +111,14 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		enableButtons = true;
 		selectedNode = null;
 		selectedChunk = null;
 		frmBackupService = new JFrame();
-		frmBackupService.setIconImage(((ImageIcon) UIManager
-				.getIcon("FileView.hardDriveIcon")).getImage());
+		if (System.getProperty("os.name").contains("Windows")) {
+			frmBackupService.setIconImage(((ImageIcon) UIManager
+					.getIcon("FileView.hardDriveIcon")).getImage());
+		}
 		frmBackupService.setResizable(false);
 		frmBackupService.setTitle("Backup Service");
 		frmBackupService.setBounds(100, 100, 912, 500);
@@ -156,23 +164,22 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		lblBackupService.setBounds(10, 11, 155, 36);
 		frmBackupService.getContentPane().add(lblBackupService);
 
-		JButton btnNewButton = new JButton("Add file");
-		btnNewButton.addActionListener(new ActionListener() {
+		backupButton = new JButton("Add file");
+		backupButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				final JFileChooser fc = new JFileChooser();
 				int returnVal = fc.showOpenDialog(frmBackupService);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File file = fc.getSelectedFile();
-
 					server.backupFile(file, new Integer(
 							VisualInterface.this.degreeField.getText()));
 					VisualInterface.this.clearDetailedText();
-					restoreButton.setEnabled(false);
+					restoreButton.setEnabled(enableButtons);
 				}
 			}
 		});
-		btnNewButton.setBounds(10, 331, 89, 23);
-		frmBackupService.getContentPane().add(btnNewButton);
+		backupButton.setBounds(10, 331, 89, 23);
+		frmBackupService.getContentPane().add(backupButton);
 
 		JButton btnDeleteAllChunks = new JButton("Delete All Chunks");
 		btnDeleteAllChunks.addActionListener(new ActionListener() {
@@ -489,7 +496,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		if (selectedNode != null) {
 			setDetailedFileText();
 			clearDetailedChunkText();
-			restoreButton.setEnabled(true);
+			restoreButton.setEnabled(enableButtons);
 		} else {
 			clearDetailedText();
 			restoreButton.setEnabled(false);
@@ -577,4 +584,13 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		progressBar.setValue(value);
 		progressBar.repaint();
 	}
+
+	@Override
+	public void setEnabledButtons(boolean value) {
+		restoreButton.setEnabled(value);
+		backupButton.setEnabled(value);
+		enableButtons = value;
+
+	}
+
 }

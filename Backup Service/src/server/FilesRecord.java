@@ -100,6 +100,27 @@ public class FilesRecord {
 		return true;
 	}
 
+	public boolean deleteFile(FileInfo dc) {
+		return deleteFile(dc.getName());
+	}
+
+	public boolean deleteFile(String fileName) {
+
+		boolean found = false;
+		FileInfo newFile = null;
+		for (FileInfo f : files) {
+			if (f.getName().equals(fileName)) {
+				found = true;
+				newFile = f;
+			}
+		}
+		if (found)
+			files.remove(newFile);
+
+		updateRecordFile();
+		return true;
+	}
+
 	private void updateRecordFile() {
 		try {
 			File f = new File("data" + File.separator + RECORD_NAME);

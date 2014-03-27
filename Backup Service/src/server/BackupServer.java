@@ -44,6 +44,7 @@ public class BackupServer {
 	}
 
 	public boolean backupFile(File file, int degree) {
+		listener.setEnabledButtons(false);
 
 		ChunkedFile chunkedFile = new ChunkedFile();
 		if (!chunkedFile.loadFile(file))
@@ -98,7 +99,7 @@ public class BackupServer {
 				file = files.getFiles().get(i);
 		}
 		ChunkRestoreProtocolInitiator restore = new ChunkRestoreProtocolInitiator(
-				file);
+				file, listener);
 		new Thread(restore).start();
 		updateVisuals();
 
