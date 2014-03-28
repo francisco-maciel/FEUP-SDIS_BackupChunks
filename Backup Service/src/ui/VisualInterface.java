@@ -24,6 +24,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.JTree;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.CompoundBorder;
@@ -68,6 +69,8 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	private JTextField DesiredDegreeField;
 	private JProgressBar progressBar;
 	private boolean enableButtons;
+	private JTextField maxSizeField;
+	private JTextField actualSizeField;
 
 	/**
 	 * Launch the application.
@@ -396,6 +399,49 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		progressBar.setBounds(109, 331, 416, 23);
 		progressBar.setForeground(new Color(51, 153, 255));
 		frmBackupService.getContentPane().add(progressBar);
+
+		JLabel lblNewLabel = new JLabel("Space occupied: ");
+		lblNewLabel.setBounds(324, 52, 81, 14);
+		frmBackupService.getContentPane().add(lblNewLabel);
+
+		JLabel label = new JLabel("/");
+		label.setBounds(506, 52, 14, 14);
+		frmBackupService.getContentPane().add(label);
+
+		actualSizeField = new JTextField();
+		actualSizeField.setHorizontalAlignment(SwingConstants.RIGHT);
+		actualSizeField.setEditable(false);
+		actualSizeField.setBounds(407, 52, 89, 14);
+		frmBackupService.getContentPane().add(actualSizeField);
+		actualSizeField.setColumns(10);
+
+		maxSizeField = new JTextField();
+		maxSizeField.setHorizontalAlignment(SwingConstants.LEFT);
+		maxSizeField.setEditable(false);
+		maxSizeField.setBounds(516, 52, 108, 14);
+		frmBackupService.getContentPane().add(maxSizeField);
+		maxSizeField.setColumns(10);
+
+		JButton btnNewButton = new JButton("Alter");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				int ans = 0;
+				try {
+					ans = Integer.parseInt((String) JOptionPane
+							.showInputDialog(null, "Set max size (in 64k)",
+									"Change max size",
+									JOptionPane.INFORMATION_MESSAGE, null,
+									null, "1 = 64000"));
+				} catch (NumberFormatException e) {
+
+					return;
+				}
+				ChunksRecord.get().setMaxSize(ans * 64 * 1000);
+				updateChunks(ChunksRecord.get().getChunks());
+			}
+		});
+		btnNewButton.setBounds(629, 48, 42, 23);
+		frmBackupService.getContentPane().add(btnNewButton);
 		frmBackupService.setLocationRelativeTo(null);
 	}
 
@@ -441,6 +487,13 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 
 	@Override
 	public void updateChunks(Vector<Chunk> chunks) {
+		maxSizeField.setText("" + ChunksRecord.get().getMaxSize());
+		if (ChunksRecord.get().getTotalSize() >= ChunksRecord.get()
+				.getMaxSize())
+			actualSizeField.setForeground(Color.RED);
+		else
+			actualSizeField.setForeground(Color.BLACK);
+		actualSizeField.setText("" + ChunksRecord.get().getTotalSize());
 
 		try {
 			chunksHeld.removeAllChildren();
@@ -536,8 +589,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 
 	private void setDetailedFileText() {
 		if (selectedNode != null) {
-			FileInfo file = FilesRecord.getFilesRecord().getFileInfo(
-					selectedNode);
+			FileInfo file = FilesRecord.get().getFileInfo(selectedNode);
 			setDetailedText(file.getName(), file.getPath(), file.getSize(),
 					file.getDesiredDegree());
 		}
@@ -545,12 +597,10 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 
 	private void setDetailedChunkText() {
 		if (selectedChunk != null) {
-			for (int i = 0; i < ChunksRecord.getChunksRecord().getChunks()
-					.size(); i++) {
-				if (ChunksRecord.getChunksRecord().getChunks().get(i)
-						.getChunkFileName().equals(selectedChunk)) {
-					Chunk chunk = ChunksRecord.getChunksRecord().getChunks()
-							.get(i);
+			for (int i = 0; i < ChunksRecord.get().getChunks().size(); i++) {
+				if (ChunksRecord.get().getChunks().get(i).getChunkFileName()
+						.equals(selectedChunk)) {
+					Chunk chunk = ChunksRecord.get().getChunks().get(i);
 					setDetailedChunk(chunk.getName(), chunk.getNo(),
 							chunk.getSize(), chunk.getActualDegree(),
 							chunk.desiredDegree);

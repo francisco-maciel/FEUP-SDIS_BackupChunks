@@ -17,12 +17,14 @@ import java.util.Vector;
 import utils.Debug;
 
 public class ChunksRecord {
-	// TODO removing chunks from record, file, and erasing file
 
 	public static final String RECORD_NAME = ".chunkRecord";
 	private static ChunksRecord chuncksRecord;
 
 	private Vector<Chunk> chunks;
+	private Integer max_size;
+	private int total_size;
+	Vector<String> deletedFiles;
 
 	@SuppressWarnings("unchecked")
 	private ChunksRecord() {
@@ -37,6 +39,9 @@ public class ChunksRecord {
 				ObjectInput input = new ObjectInputStream(buffer);
 
 				chunks = (Vector<Chunk>) input.readObject();
+				total_size = countTotalSize();
+				max_size = (Integer) input.readObject();
+				deletedFiles = (Vector<String>) input.readObject();
 				input.close();
 
 			} catch (IOException | ClassNotFoundException e) {
@@ -45,10 +50,21 @@ public class ChunksRecord {
 
 		} else {
 			chunks = new Vector<Chunk>();
+			deletedFiles = new Vector<String>();
+			total_size = 0;
+			max_size = new Integer(10 * 1024 * 1024);
 			Debug.debug("Created original chunk Records File");
 			updateRecordFile();
 		}
 
+	}
+
+	private int countTotalSize() {
+		int total = 0;
+		for (Chunk c : chunks) {
+			total += c.getSize();
+		}
+		return total;
 	}
 
 	private void createDataFolder() {
@@ -62,7 +78,7 @@ public class ChunksRecord {
 
 	}
 
-	public static ChunksRecord getChunksRecord() {
+	public static ChunksRecord get() {
 		if (chuncksRecord == null) {
 			chuncksRecord = new ChunksRecord();
 		}
@@ -106,6 +122,7 @@ public class ChunksRecord {
 		c.desiredDegree = newC.desiredDegree;
 
 		chunks.add(c);
+		total_size = countTotalSize();
 
 		updateRecordFile();
 		return true;
@@ -115,6 +132,7 @@ public class ChunksRecord {
 		deleteDirectory(new File("data" + File.separator + "chunks"));
 		createDataFolder();
 		chunks.removeAllElements();
+		total_size = countTotalSize();
 		updateRecordFile();
 	}
 
@@ -139,9 +157,12 @@ public class ChunksRecord {
 					// DELETE CHUNK
 					deleteChunk(chunks.get(i));
 					chunks.remove(i);
+
 					i--;
 				}
 			}
+			total_size = countTotalSize();
+			deletedFiles.add(fileId);
 			updateRecordFile();
 			return true;
 		} catch (Exception e) {
@@ -177,6 +198,8 @@ public class ChunksRecord {
 			OutputStream buffer = new BufferedOutputStream(file);
 			ObjectOutput output = new ObjectOutputStream(buffer);
 			output.writeObject(chunks);
+			output.writeObject(max_size);
+			output.writeObject(deletedFiles);
 			output.close();
 
 		} catch (IOException e) {
@@ -213,6 +236,23 @@ public class ChunksRecord {
 		}
 
 		return -1;
+	}
+
+	public int getMaxSize() {
+		return max_size;
+	}
+
+	public int getTotalSize() {
+		return total_size;
+	}
+
+	public void setMaxSize(int ans) {
+		this.max_size = ans;
+		updateRecordFile();
+	}
+
+	public boolean wasDeleted(String name) {
+		return deletedFiles.contains((String) name);
 	}
 
 }

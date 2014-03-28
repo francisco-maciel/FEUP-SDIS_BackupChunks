@@ -50,6 +50,8 @@ public class MCListener extends Thread {
 						handleGetChunk(received);
 					else if (received.getType().equals(MessageType.DELETE))
 						handleDelete(received);
+					else if (received.getType().equals(MessageType.ISLOST))
+						handleIsLost(received);
 				}
 
 			}
@@ -59,6 +61,12 @@ public class MCListener extends Thread {
 		}
 		// s.leaveGroup(InetAddress.getByName(BackupServer.mc_address));
 		// s.close();
+	}
+
+	private void handleIsLost(Message received) {
+		String name = received.getFileId();
+		if (ChunksRecord.get().wasDeleted(name))
+			(new DeleteSender(name)).start();
 	}
 
 	private void handleGetChunk(Message received) {
@@ -80,8 +88,8 @@ public class MCListener extends Thread {
 	}
 
 	private void handleStored(Message received, String origin) {
-		if (ChunksRecord.getChunksRecord().incrementChunkValue(
-				received.getFileId(), origin, received.getChunkNo())) {
+		if (ChunksRecord.get().incrementChunkValue(received.getFileId(),
+				origin, received.getChunkNo())) {
 			java.awt.EventQueue.invokeLater(new Runnable() {
 				public void run() {
 					bs.updateVisuals();
@@ -93,8 +101,7 @@ public class MCListener extends Thread {
 
 	private void handleDelete(Message received) {
 		System.out.println(received.getFileId());
-		if (ChunksRecord.getChunksRecord().deleteChunksOfFile(
-				received.getFileId())) {
+		if (ChunksRecord.get().deleteChunksOfFile(received.getFileId())) {
 			java.awt.EventQueue.invokeLater(new Runnable() {
 				public void run() {
 					bs.updateVisuals();

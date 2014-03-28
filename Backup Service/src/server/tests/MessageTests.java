@@ -15,6 +15,7 @@ import server.messages.Message;
 import server.messages.MessageChunk;
 import server.messages.MessageDelete;
 import server.messages.MessageGetChunk;
+import server.messages.MessageIsLost;
 import server.messages.MessagePutChunk;
 import server.messages.MessageRemoved;
 import server.messages.MessageStored;
@@ -154,6 +155,27 @@ public class MessageTests {
 			assertNotNull(parsed);
 			assertTrue(parsed instanceof MessageStored);
 			MessageStored mc = (MessageStored) parsed;
+			assertEquals(mc.getChunkNo(), 0);
+			assertEquals(mc.getFileId(), "chunkName");
+			assertEquals(mc.getVersion(), Version.get());
+
+		} catch (UnrecognizedMessageException e) {
+			fail("Unrecognized message received");
+		}
+
+	}
+
+	@Test
+	public void testMessageIsLost() {
+		String message = "ISLOST " + Version.get() + " chunkName\r\n\r\n";
+		Message m = new MessageIsLost("chunkName");
+		assertEquals(message, m.toMessage());
+
+		try {
+			Message parsed = Message.parse(message);
+			assertNotNull(parsed);
+			assertTrue(parsed instanceof MessageIsLost);
+			MessageIsLost mc = (MessageIsLost) parsed;
 			assertEquals(mc.getChunkNo(), 0);
 			assertEquals(mc.getFileId(), "chunkName");
 			assertEquals(mc.getVersion(), Version.get());

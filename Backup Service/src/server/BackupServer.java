@@ -3,6 +3,7 @@ package server;
 import java.io.File;
 import java.util.Vector;
 
+import server.protocol.CheckAllFiles;
 import server.protocol.ChunkBackupProtocolInitiator;
 import server.protocol.ChunkRestoreProtocolInitiator;
 import server.protocol.DeleteSender;
@@ -29,8 +30,8 @@ public class BackupServer {
 		BackupServer.mc_port = mc_port;
 		BackupServer.mdb_port = mdb_port;
 		BackupServer.mdr_port = mdr_port;
-		this.record = ChunksRecord.getChunksRecord();
-		this.files = FilesRecord.getFilesRecord();
+		this.record = ChunksRecord.get();
+		this.files = FilesRecord.get();
 		listener = null;
 
 	}
@@ -40,8 +41,9 @@ public class BackupServer {
 		// record.printChunksHeld();
 		// files.printFilesHeld();
 		updateVisuals();
-		(new Thread(new MDBListener(this))).start();
-		(new Thread(new MCListener(this))).start();
+		(new MDBListener(this)).start();
+		(new MCListener(this)).start();
+		(new CheckAllFiles(record.getChunks())).start();
 	}
 
 	public boolean backupFile(File file, int degree) {
@@ -51,7 +53,7 @@ public class BackupServer {
 		if (!chunkedFile.loadFile(file))
 			return false;
 		ChunkBackupProtocolInitiator backup = new ChunkBackupProtocolInitiator(
-				chunkedFile, degree, listener);
+				chunkedFile, degree, listener, file.lastModified());
 		new Thread(backup).start();
 		updateVisuals();
 

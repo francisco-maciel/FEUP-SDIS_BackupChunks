@@ -54,7 +54,7 @@ public class FilesRecord {
 			theDir.mkdir();
 	}
 
-	public static FilesRecord getFilesRecord() {
+	public static FilesRecord get() {
 		if (fileRecord == null) {
 			fileRecord = new FilesRecord();
 		}

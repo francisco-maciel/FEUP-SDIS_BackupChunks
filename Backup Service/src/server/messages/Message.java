@@ -198,6 +198,8 @@ public abstract class Message {
 			else if (type.equals(MessageType.REMOVED))
 				newMessage = new MessageRemoved(words[1],
 						Integer.parseInt(words[2]));
+			else if (type.equals(MessageType.ISLOST))
+				newMessage = new MessageIsLost(words[1], words[2]);
 		} catch (NumberFormatException e) {
 			throw new UnrecognizedMessageException();
 		}
@@ -211,6 +213,7 @@ public abstract class Message {
 		wordsByType.put(MessageType.REMOVED, 3);
 		wordsByType.put(MessageType.DELETE, 2);
 		wordsByType.put(MessageType.STORED, 4);
+		wordsByType.put(MessageType.ISLOST, 3);
 	}
 
 	private static MessageType getMessageType(String header) throws UnrecognizedMessageException {
@@ -226,6 +229,8 @@ public abstract class Message {
 			return MessageType.REMOVED;
 		else if (header.equalsIgnoreCase("STORED"))
 			return MessageType.STORED;
+		else if (header.equals("ISLOST"))
+			return MessageType.ISLOST;
 
 		throw new UnrecognizedMessageException();
 	}

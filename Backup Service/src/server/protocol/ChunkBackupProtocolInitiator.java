@@ -13,12 +13,14 @@ public class ChunkBackupProtocolInitiator extends Thread {
 	ChunkedFile file;
 	int desiredDegree;
 	BackupListener listener;
+	long modifiedDate;
 
 	public ChunkBackupProtocolInitiator(ChunkedFile file, int degree,
-			BackupListener listener) {
+			BackupListener listener, long modifiedDate) {
 		this.file = file;
 		desiredDegree = degree;
 		this.listener = listener;
+		this.modifiedDate = modifiedDate;
 	}
 
 	@Override
@@ -80,7 +82,7 @@ public class ChunkBackupProtocolInitiator extends Thread {
 		}
 
 		if (result) {
-			FilesRecord.getFilesRecord().addFile(
+			FilesRecord.get().addFile(
 					new FileInfo(file.fileName, file.path, file.size,
 							desiredDegree, file.getCryptName()));
 
