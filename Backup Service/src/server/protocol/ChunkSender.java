@@ -37,6 +37,7 @@ public class ChunkSender extends Thread {
 
 			server.setTimeToLive(1);
 			server.send(pack);
+			System.out.println("MDR: SENT CHUNK " + chunk.getNo());
 
 		} catch (IOException e) {
 
