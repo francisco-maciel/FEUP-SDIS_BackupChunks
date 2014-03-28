@@ -17,6 +17,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
@@ -58,6 +59,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	private JTextField desiredField;
 	JButton restoreButton;
 	JButton backupButton;
+	JButton deleteButton;
 	private JTextField degreeField;
 	private JTextField fileIdField;
 	private JTextField chunkNoField;
@@ -175,6 +177,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 							VisualInterface.this.degreeField.getText()));
 					VisualInterface.this.clearDetailedText();
 					restoreButton.setEnabled(enableButtons);
+					deleteButton.setEnabled(enableButtons);
 				}
 			}
 		});
@@ -269,6 +272,24 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		restoreButton.setBounds(115, 159, 89, 23);
 		panel.add(restoreButton);
 		restoreButton.setEnabled(false);
+
+		deleteButton = new JButton("Delete");
+		deleteButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				int dialogResult = JOptionPane.showConfirmDialog(null,
+						"Are you sure you with to delete the file  "
+								+ selectedNode + "?", "Delete file",
+						JOptionPane.YES_NO_OPTION);
+
+				if (dialogResult == JOptionPane.YES_OPTION) {
+					server.deleteFile(selectedNode);
+
+				}
+			}
+		});
+		deleteButton.setBounds(16, 159, 89, 23);
+		panel.add(deleteButton);
+		deleteButton.setEnabled(false);
 
 		JLabel lblDefaultReplicationDegree = new JLabel("Replication Degree:");
 		lblDefaultReplicationDegree.setBounds(10, 365, 108, 14);
@@ -497,9 +518,12 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 			setDetailedFileText();
 			clearDetailedChunkText();
 			restoreButton.setEnabled(enableButtons);
+			deleteButton.setEnabled(enableButtons);
 		} else {
 			clearDetailedText();
 			restoreButton.setEnabled(false);
+			deleteButton.setEnabled(false);
+
 		}
 
 		if (selectedChunk != null) {
@@ -588,9 +612,9 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 	@Override
 	public void setEnabledButtons(boolean value) {
 		restoreButton.setEnabled(value);
+		deleteButton.setEnabled(false);
 		backupButton.setEnabled(value);
 		enableButtons = value;
 
 	}
-
 }

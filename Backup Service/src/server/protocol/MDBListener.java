@@ -13,7 +13,7 @@ import server.messages.MessagePutChunk;
 import server.messages.MessageType;
 import server.messages.UnrecognizedMessageException;
 
-public class MDBListener implements Runnable {
+public class MDBListener extends Thread {
 	BackupServer bs;
 
 	public MDBListener(BackupServer bs) {

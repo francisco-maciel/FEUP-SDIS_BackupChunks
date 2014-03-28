@@ -14,7 +14,7 @@ import server.messages.Message;
 import server.messages.MessageType;
 import server.messages.UnrecognizedMessageException;
 
-public class MCListener implements Runnable {
+public class MCListener extends Thread {
 	BackupServer bs;
 
 	public MCListener(BackupServer bs) {
@@ -67,7 +67,7 @@ public class MCListener implements Runnable {
 		if (index != -1) {
 			Chunk c = bs.getRecord().getChunks().get(index);
 			DataChunk dc = c.getDataChunk();
-			(new ChunkSender(dc)).run();
+			(new ChunkSender(dc)).start();
 
 		}
 	}
@@ -92,6 +92,7 @@ public class MCListener implements Runnable {
 	}
 
 	private void handleDelete(Message received) {
+		System.out.println(received.getFileId());
 		if (ChunksRecord.getChunksRecord().deleteChunksOfFile(
 				received.getFileId())) {
 			java.awt.EventQueue.invokeLater(new Runnable() {

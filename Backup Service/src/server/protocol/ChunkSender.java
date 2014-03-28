@@ -10,7 +10,7 @@ import server.BackupServer;
 import server.DataChunk;
 import server.messages.MessageChunk;
 
-public class ChunkSender implements Runnable {
+public class ChunkSender extends Thread {
 
 	DataChunk chunk;
 
@@ -47,7 +47,7 @@ public class ChunkSender implements Runnable {
 	private boolean checkChunkAlreadySent() {
 		AtomicBoolean result = new AtomicBoolean(false);
 		Thread t = (new ChunkListener(chunk.getName(), chunk.getNo(), result));
-		t.run();
+		t.start();
 		try {
 			t.join();
 		} catch (InterruptedException e1) {

@@ -6,34 +6,42 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 
 import server.BackupServer;
-import server.messages.MessageGetChunk;
+import server.messages.MessageDelete;
 
-public class GetChunkSender extends Thread {
+public class DeleteSender extends Thread {
 
 	String name;
-	int n;
 
-	public GetChunkSender(String name, int n) {
+	public DeleteSender(String name) {
 		this.name = name;
-		this.n = n;
+
 	}
 
 	@Override
 	public void run() {
 		try {
+			String message = new MessageDelete(name).toMessage();
 
 			@SuppressWarnings("resource")
 			MulticastSocket server = new MulticastSocket();
-			server.setTimeToLive(1);
-			DatagramPacket pack;
-			String message = new MessageGetChunk(name, n).toMessage();
-
 			byte buf[] = message.getBytes("ISO-8859-1");
-			pack = new DatagramPacket(buf, message.length(),
+
+			DatagramPacket pack = new DatagramPacket(buf, message.length(),
 					InetAddress.getByName(BackupServer.mc_address),
 					BackupServer.mc_port);
 
-			server.send(pack);
+			server.setTimeToLive(1);
+
+			try {
+				server.send(pack);
+				Thread.sleep(1000);
+				server.send(pack);
+				Thread.sleep(5000);
+				server.send(pack);
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 
 		} catch (IOException e) {
 

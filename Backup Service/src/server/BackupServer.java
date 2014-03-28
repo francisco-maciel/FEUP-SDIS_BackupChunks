@@ -5,6 +5,7 @@ import java.util.Vector;
 
 import server.protocol.ChunkBackupProtocolInitiator;
 import server.protocol.ChunkRestoreProtocolInitiator;
+import server.protocol.DeleteSender;
 import server.protocol.MCListener;
 import server.protocol.MDBListener;
 import ui.BackupListener;
@@ -105,4 +106,10 @@ public class BackupServer {
 
 	}
 
+	public void deleteFile(String selectedNode) {
+		FileInfo file = files.getFileInfo(selectedNode);
+		(new DeleteSender(file.getCryptedName())).start();
+		files.deleteFile(file);
+		updateVisuals();
+	}
 }

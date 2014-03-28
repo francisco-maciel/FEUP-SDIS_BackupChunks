@@ -26,7 +26,7 @@ import server.messages.MessageType;
 import server.messages.UnrecognizedMessageException;
 import ui.BackupListener;
 
-public class ChunkRestoreProtocolInitiator implements Runnable {
+public class ChunkRestoreProtocolInitiator extends Thread {
 	FileInfo file;
 	HashSet<Integer> chunkNos;
 	Vector<DataChunk> dc;
@@ -54,7 +54,7 @@ public class ChunkRestoreProtocolInitiator implements Runnable {
 			// send all getChunks
 
 			for (int i = 0; i < file.getNumChunks(); i++) {
-				(new GetChunkSender(file.getCryptedName(), i)).run();
+				(new GetChunkSender(file.getCryptedName(), i)).start();
 				int once = 0;
 				while (true) {
 					socket.setSoTimeout(1200);
@@ -79,7 +79,7 @@ public class ChunkRestoreProtocolInitiator implements Runnable {
 							} else {
 								once++;
 								(new GetChunkSender(file.getCryptedName(), i))
-										.run();
+										.start();
 
 							}
 						}

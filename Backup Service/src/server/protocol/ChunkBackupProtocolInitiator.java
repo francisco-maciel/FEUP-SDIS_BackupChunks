@@ -9,7 +9,7 @@ import server.FileInfo;
 import server.FilesRecord;
 import ui.BackupListener;
 
-public class ChunkBackupProtocolInitiator implements Runnable {
+public class ChunkBackupProtocolInitiator extends Thread {
 	ChunkedFile file;
 	int desiredDegree;
 	BackupListener listener;
@@ -90,7 +90,7 @@ public class ChunkBackupProtocolInitiator implements Runnable {
 
 			System.out.println("FILE BACKUP COMPELTE");
 		} else {
-			// TODO remove chunks already backed
+			(new DeleteSender(file.getCryptName())).start();
 			listener.updateProgressBar(0);
 
 			JOptionPane.showMessageDialog(null, "The file " + file.fileName

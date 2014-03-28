@@ -142,6 +142,7 @@ public class ChunksRecord {
 					i--;
 				}
 			}
+			updateRecordFile();
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

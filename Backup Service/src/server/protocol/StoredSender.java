@@ -8,7 +8,7 @@ import java.net.MulticastSocket;
 import server.BackupServer;
 import server.messages.MessageStored;
 
-public class StoredSender implements Runnable {
+public class StoredSender extends Thread {
 
 	String name;
 	int no;
