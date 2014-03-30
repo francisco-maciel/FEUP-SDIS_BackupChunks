@@ -71,7 +71,8 @@ public class MessageTests {
 
 	@Test
 	public void testMessageGetChunk() {
-		String message = "GETCHUNK " + Version.get() + " chunkName 0\r\n\r\n";
+		String message = "GETCHUNK " + Version.get()
+				+ " chunkName 0\r\nEXTENDED 8700\r\n\r\n";
 		Message m = new MessageGetChunk("chunkName", 0);
 		assertEquals(message, m.toMessage());
 
@@ -82,6 +83,7 @@ public class MessageTests {
 			assertTrue(parsed instanceof MessageGetChunk);
 			MessageGetChunk mc = (MessageGetChunk) parsed;
 			assertEquals(mc.getChunkNo(), 0);
+			assertEquals(mc.getPort(), 8700);
 			assertEquals(mc.getFileId(), "chunkName");
 			assertEquals(mc.getVersion(), Version.get());
 

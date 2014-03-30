@@ -109,8 +109,23 @@ public abstract class Message {
 
 						parsed = generateMessageHeader(type, words);
 
+					} else if (lineIndex == 1) {
+						if (parsed.getType().equals(MessageType.GETCHUNK)) {
+							String[] words = line.split(" ");
+							if (words.length == 2) {
+								if (words[0].equalsIgnoreCase("EXTENDED")) {
+									try {
+										int port = Integer.parseInt(words[1]);
+										((MessageGetChunk) parsed)
+												.setPort(port);
+
+									} catch (NumberFormatException e) {
+
+									}
+								}
+							}
+						}
 					}
-					// else ignored
 
 					lineIndex++;
 				}

@@ -6,18 +6,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.net.DatagramSocket;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
-import server.BackupServer;
 import server.DataChunk;
 import server.FileInfo;
 import server.messages.Message;
@@ -26,27 +25,27 @@ import server.messages.MessageType;
 import server.messages.UnrecognizedMessageException;
 import ui.BackupListener;
 
-public class ChunkRestoreProtocolInitiator extends Thread {
-	FileInfo file;
+public class ChunkEnhancedRestoreProtocolInitiator extends Thread {
+	public FileInfo file;
 	HashSet<Integer> chunkNos;
-	Vector<DataChunk> dc;
+	public Vector<DataChunk> dc;
+	AtomicBoolean result;
 	BackupListener l;
 
-	public ChunkRestoreProtocolInitiator(FileInfo file, BackupListener l) {
+	public ChunkEnhancedRestoreProtocolInitiator(FileInfo file,
+			AtomicBoolean result, BackupListener listener) {
 		this.file = file;
 		chunkNos = new HashSet<Integer>();
 		dc = new Vector<DataChunk>();
-		this.l = l;
+		this.result = result;
+		this.l = listener;
 	}
 
 	@Override
 	public void run() {
-		l.setEnabledButtons(false);
-		MulticastSocket socket;
+		DatagramSocket socket;
 		try {
-			socket = new MulticastSocket(BackupServer.mdr_port);
-
-			socket.joinGroup(InetAddress.getByName(BackupServer.mdr_address));
+			socket = new DatagramSocket(8700);
 
 			byte buf[] = new byte[1024 * 64];
 			DatagramPacket pack = new DatagramPacket(buf, buf.length);
@@ -64,16 +63,7 @@ public class ChunkRestoreProtocolInitiator extends Thread {
 					} catch (IOException e) {
 						if (e instanceof java.net.SocketTimeoutException) {
 							if (once == 2) {
-								JOptionPane
-										.showMessageDialog(
-												null,
-												"The file "
-														+ file.getName()
-														+ " could not be restored! Missing chunk: "
-														+ i,
-												"File Restore Failed!",
-												JOptionPane.WARNING_MESSAGE);
-								l.setEnabledButtons(true);
+								result.set(false);
 
 								return;
 							} else {
@@ -108,12 +98,25 @@ public class ChunkRestoreProtocolInitiator extends Thread {
 				l.updateProgressBar(100 * (i + 1) / file.getNumChunks());
 
 			}
-
+			result.set(true);
 			finishSavingFile();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		l.setEnabledButtons(true);
+
+	}
+
+	private String listenForMessage(DatagramSocket s, DatagramPacket pack) throws IOException {
+		s.receive(pack);
+		String data = new String(
+				Arrays.copyOf(pack.getData(), pack.getLength()), "ISO-8859-1");
+		return data;
+	}
+
+	private boolean processChunk(MessageChunk received) {
+		dc.add(new DataChunk(received.getFileId(), received.getChunkNo(),
+				received.getBody(), received.getBody().length));
+		return true;
 
 	}
 
@@ -164,20 +167,7 @@ public class ChunkRestoreProtocolInitiator extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
 
-	private boolean processChunk(MessageChunk received) {
-		dc.add(new DataChunk(received.getFileId(), received.getChunkNo(),
-				received.getBody(), received.getBody().length));
-		return true;
-
-	}
-
-	private String listenForMessage(MulticastSocket s, DatagramPacket pack) throws IOException {
-		s.receive(pack);
-		String data = new String(
-				Arrays.copyOf(pack.getData(), pack.getLength()), "ISO-8859-1");
-		return data;
 	}
 
 	public void sortChunks(Vector<DataChunk> dataChunk) {
@@ -190,4 +180,5 @@ public class ChunkRestoreProtocolInitiator extends Thread {
 
 		});
 	}
+
 }

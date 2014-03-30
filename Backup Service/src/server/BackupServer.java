@@ -2,9 +2,11 @@ package server;
 
 import java.io.File;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import server.protocol.CheckAllFiles;
 import server.protocol.ChunkBackupProtocolInitiator;
+import server.protocol.ChunkEnhancedRestoreProtocolInitiator;
 import server.protocol.ChunkRestoreProtocolInitiator;
 import server.protocol.DeleteSender;
 import server.protocol.MCListener;
@@ -105,16 +107,50 @@ public class BackupServer {
 		return files;
 	}
 
-	public void restoreFile(String chunkName) {
-		FileInfo file = null;
-		for (int i = 0; i < files.getNumberFiles(); i++) {
-			if (files.getFiles().get(i).getName().equals(chunkName))
-				file = files.getFiles().get(i);
-		}
-		ChunkRestoreProtocolInitiator restore = new ChunkRestoreProtocolInitiator(
-				file, listener);
-		new Thread(restore).start();
-		updateVisuals();
+	public void restoreFile(final String chunkName) {
+		(new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+
+				listener.setEnabledButtons(false);
+				FileInfo file = null;
+				for (int i = 0; i < files.getNumberFiles(); i++) {
+					if (files.getFiles().get(i).getName().equals(chunkName))
+						file = files.getFiles().get(i);
+				}
+				AtomicBoolean result = new AtomicBoolean(false);
+
+				ChunkEnhancedRestoreProtocolInitiator restoreUDP = new ChunkEnhancedRestoreProtocolInitiator(
+						file, result, listener);
+
+				restoreUDP.start();
+
+				updateVisuals();
+
+				try {
+					restoreUDP.join();
+
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				if (result.get() == false) {
+					System.out.println("udp fail");
+
+					ChunkRestoreProtocolInitiator restore = new ChunkRestoreProtocolInitiator(
+							file, listener);
+					new Thread(restore).start();
+				} else {
+					System.out.println("udp success");
+				}
+				listener.setEnabledButtons(true);
+
+				updateVisuals();
+
+			}
+
+		})).start();
 
 	}
 

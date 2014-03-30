@@ -30,7 +30,6 @@ public class ChunkSender extends Thread {
 			@SuppressWarnings("resource")
 			MulticastSocket server = new MulticastSocket();
 			byte buf[] = message.getBytes("ISO-8859-1");
-
 			DatagramPacket pack = new DatagramPacket(buf, message.length(),
 					InetAddress.getByName(BackupServer.mdr_address),
 					BackupServer.mdr_port);

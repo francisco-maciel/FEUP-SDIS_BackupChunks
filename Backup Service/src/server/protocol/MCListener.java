@@ -11,6 +11,7 @@ import server.Chunk;
 import server.ChunksRecord;
 import server.DataChunk;
 import server.messages.Message;
+import server.messages.MessageGetChunk;
 import server.messages.MessageType;
 import server.messages.UnrecognizedMessageException;
 
@@ -40,14 +41,15 @@ public class MCListener extends Thread {
 				try {
 					received = Message.parse(data);
 				} catch (UnrecognizedMessageException e) {
-					System.out.println("Ignored Message");
+					System.out.println("MC: Ignored Message");
 				}
 				if (received != null) {
 					System.out.println("MC : GOT " + received.getType());
 					if (received.getType().equals(MessageType.STORED))
 						handleStored(received, pack.getAddress().toString());
 					else if (received.getType().equals(MessageType.GETCHUNK))
-						handleGetChunk(received);
+						handleGetChunk(received, pack.getAddress()
+								.getHostAddress());
 					else if (received.getType().equals(MessageType.DELETE))
 						handleDelete(received);
 					else if (received.getType().equals(MessageType.ISLOST))
@@ -78,13 +80,17 @@ public class MCListener extends Thread {
 			(new DeleteSender(name)).start();
 	}
 
-	private void handleGetChunk(Message received) {
+	private void handleGetChunk(Message received, String ip) {
 		int index = bs.getRecord().getChunkIndex(received.getFileId(),
 				received.getChunkNo());
 		if (index != -1) {
 			Chunk c = bs.getRecord().getChunks().get(index);
 			DataChunk dc = c.getDataChunk();
-			(new ChunkSender(dc)).start();
+			if (((MessageGetChunk) received).getPort() == 0)
+				(new ChunkSender(dc)).start();
+			else
+				(new ChunkSenderEnhanced(dc, ip,
+						((MessageGetChunk) received).getPort())).start();
 
 		}
 	}
