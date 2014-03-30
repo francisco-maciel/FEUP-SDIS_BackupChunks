@@ -409,28 +409,28 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		frmBackupService.getContentPane().add(progressBar);
 
 		JLabel lblNewLabel = new JLabel("Space occupied: ");
-		lblNewLabel.setBounds(324, 52, 81, 14);
+		lblNewLabel.setBounds(268, 52, 81, 14);
 		frmBackupService.getContentPane().add(lblNewLabel);
 
 		JLabel label = new JLabel("/");
-		label.setBounds(506, 52, 14, 14);
+		label.setBounds(458, 52, 14, 14);
 		frmBackupService.getContentPane().add(label);
 
 		actualSizeField = new JTextField();
 		actualSizeField.setHorizontalAlignment(SwingConstants.RIGHT);
 		actualSizeField.setEditable(false);
-		actualSizeField.setBounds(407, 52, 89, 14);
+		actualSizeField.setBounds(359, 52, 89, 14);
 		frmBackupService.getContentPane().add(actualSizeField);
 		actualSizeField.setColumns(10);
 
 		maxSizeField = new JTextField();
 		maxSizeField.setHorizontalAlignment(SwingConstants.LEFT);
 		maxSizeField.setEditable(false);
-		maxSizeField.setBounds(516, 52, 108, 14);
+		maxSizeField.setBounds(466, 52, 108, 14);
 		frmBackupService.getContentPane().add(maxSizeField);
 		maxSizeField.setColumns(10);
 
-		JButton btnNewButton = new JButton("Alter");
+		JButton btnNewButton = new JButton("Force clean");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				double ans = 0;
@@ -449,7 +449,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 				updateChunks(ChunksRecord.get().getChunks());
 			}
 		});
-		btnNewButton.setBounds(629, 48, 42, 23);
+		btnNewButton.setBounds(584, 48, 91, 23);
 		frmBackupService.getContentPane().add(btnNewButton);
 		frmBackupService.setLocationRelativeTo(null);
 	}

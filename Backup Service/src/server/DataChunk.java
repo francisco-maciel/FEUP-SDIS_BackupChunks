@@ -1,8 +1,9 @@
 package server;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class DataChunk extends Chunk {
+public class DataChunk extends Chunk implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

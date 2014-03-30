@@ -40,6 +40,15 @@ public class BackupServer {
 
 		// record.printChunksHeld();
 		// files.printFilesHeld();
+		(new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				PutChunkEnhancement.getAllNonBackedChunks();
+
+			}
+
+		})).start();
 		updateVisuals();
 		(new MDBListener(this)).start();
 		(new MCListener(this)).start();
@@ -52,8 +61,9 @@ public class BackupServer {
 		ChunkedFile chunkedFile = new ChunkedFile();
 		if (!chunkedFile.loadFile(file))
 			return false;
+
 		ChunkBackupProtocolInitiator backup = new ChunkBackupProtocolInitiator(
-				chunkedFile, degree, listener, file.lastModified());
+				chunkedFile, degree, listener);
 		new Thread(backup).start();
 		updateVisuals();
 

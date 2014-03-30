@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import server.BackupServer;
 import server.DataChunk;
+import server.PutChunkEnhancement;
 import server.messages.Message;
 import server.messages.MessagePutChunk;
 import server.messages.MessageType;
@@ -26,6 +27,7 @@ public class BackupChunk extends Thread {
 	AtomicBoolean result;
 
 	public BackupChunk(DataChunk chunk, int degree, AtomicBoolean result) {
+
 		repplies = new HashSet<String>();
 		this.chunk = chunk;
 		desiredDegree = degree;
@@ -38,8 +40,9 @@ public class BackupChunk extends Thread {
 
 	@Override
 	public void run() {
-
+		PutChunkEnhancement.saveToDisk(chunk, desiredDegree);
 		sendChunk();
+		PutChunkEnhancement.destroy(chunk);
 
 	}
 

@@ -8,20 +8,19 @@ import server.ChunkedFile;
 import server.ChunksRecord;
 import server.FileInfo;
 import server.FilesRecord;
+import server.PutChunkEnhancement;
 import ui.BackupListener;
 
 public class ChunkBackupProtocolInitiator extends Thread {
 	ChunkedFile file;
 	int desiredDegree;
 	BackupListener listener;
-	long modifiedDate;
 
 	public ChunkBackupProtocolInitiator(ChunkedFile file, int degree,
-			BackupListener listener, long modifiedDate) {
+			BackupListener listener) {
 		this.file = file;
 		desiredDegree = degree;
 		this.listener = listener;
-		this.modifiedDate = modifiedDate;
 	}
 
 	@Override
@@ -29,6 +28,13 @@ public class ChunkBackupProtocolInitiator extends Thread {
 		boolean result = true;
 		int j = 0;
 		listener.updateProgressBar(0);
+
+		for (int i = 0; i < file.getNChunks(); i++)
+			PutChunkEnhancement.saveToDisk(file.getChunk(i), desiredDegree);
+
+		FilesRecord.get().addFile(
+				new FileInfo(file.fileName, file.path, file.size,
+						desiredDegree, file.getCryptName()));
 
 		for (int i = 0; i < file.getNChunks(); i += 3) {
 			AtomicBoolean resultA = new AtomicBoolean(true);
@@ -83,9 +89,6 @@ public class ChunkBackupProtocolInitiator extends Thread {
 		}
 
 		if (result) {
-			FilesRecord.get().addFile(
-					new FileInfo(file.fileName, file.path, file.size,
-							desiredDegree, file.getCryptName()));
 
 			JOptionPane.showMessageDialog(null, "The file " + file.fileName
 					+ " backup up successfully", "File backup completed",
@@ -93,6 +96,7 @@ public class ChunkBackupProtocolInitiator extends Thread {
 
 			System.out.println("FILE BACKUP COMPELTE");
 		} else {
+			FilesRecord.get().deleteFile(file.fileName);
 			(new DeleteSender(file.getCryptName())).start();
 			listener.updateProgressBar(0);
 
