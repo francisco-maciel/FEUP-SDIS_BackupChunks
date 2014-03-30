@@ -5,16 +5,27 @@ import server.Version;
 public class MessageGetChunk extends Message {
 
 	int port;
+	boolean enhanced;
 
 	public MessageGetChunk(String fileId, int chunkNo) {
 		this(Version.get(), fileId, chunkNo);
 		port = 0;
+		enhanced = true;
 	}
 
 	public MessageGetChunk(String version, String fileId, int chunkNo) {
 		super(version, fileId, chunkNo);
 		this.type = MessageType.GETCHUNK;
 		port = 0;
+		enhanced = true;
+
+	}
+
+	public MessageGetChunk(String name, int n, boolean enhanced) {
+		super(Version.get(), name, n);
+		this.type = MessageType.GETCHUNK;
+		port = 0;
+		this.enhanced = enhanced;
 
 	}
 
@@ -28,8 +39,10 @@ public class MessageGetChunk extends Message {
 		message.append(fileId);
 		message.append(" ");
 		message.append(chunkNo);
-		message.append("\r\n");
-		message.append("EXTENDED 8700");
+		if (enhanced) {
+			message.append("\r\n");
+			message.append("EXTENDED 8700");
+		}
 		message.append("\r\n");
 		message.append("\r\n");
 

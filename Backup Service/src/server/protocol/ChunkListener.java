@@ -60,7 +60,6 @@ public class ChunkListener extends Thread {
 					if (received.getType().equals(MessageType.CHUNK)) {
 						if (received.getFileId().equals(name)
 								&& received.getChunkNo() == chunkNo) {
-
 							result.set(true);
 							return;
 						}

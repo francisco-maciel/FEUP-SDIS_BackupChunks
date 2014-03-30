@@ -1,6 +1,5 @@
 package ui;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -15,12 +14,6 @@ public class BasicInterface {
 	public static final int MDB_PORT = 8766;
 	public static final String MDR_ADDRESS = "239.0.0.1";
 	public static final int MDR_PORT = 8767;
-
-	public static void main(String args[]) {
-		BackupServer bck = initServerWithArguments(args);
-		bck.start();
-		bck.backupFile(new File("./data/randomfile.rf"), 0);
-	}
 
 	static BackupServer initServerWithArguments(String[] args) {
 		String mc_address, mdb_address, mdr_address;
@@ -56,8 +49,12 @@ public class BasicInterface {
 	public static boolean checkArguments(String[] args) {
 
 		// 6 arguments in cmd
-		if (args.length != 6)
+		if (args.length != 6) {
+			if (args.length != 0)
+				System.out.println("Too few arguments");
+
 			return false;
+		}
 
 		try {
 			Integer.parseInt(args[1]);
@@ -65,10 +62,14 @@ public class BasicInterface {
 			Integer.parseInt(args[5]);
 			if (!(InetAddress.getByName(args[0]).isMulticastAddress()
 					| InetAddress.getByName(args[2]).isMulticastAddress() | InetAddress
-					.getByName(args[4]).isMulticastAddress()))
+					.getByName(args[4]).isMulticastAddress())) {
+				System.out.println("Wrong multicast Addresses");
+
 				return false;
+			}
 
 		} catch (NumberFormatException | UnknownHostException e) {
+			System.out.println("Wrong arguments");
 			return false;
 		}
 

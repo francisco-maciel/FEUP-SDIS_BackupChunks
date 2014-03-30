@@ -27,7 +27,6 @@ public class ChunkSender extends Thread {
 			String message = new MessageChunk(chunk.getName(), chunk.getNo(),
 					chunk.getData()).toMessage();
 
-			@SuppressWarnings("resource")
 			MulticastSocket server = new MulticastSocket();
 			byte buf[] = message.getBytes("ISO-8859-1");
 			DatagramPacket pack = new DatagramPacket(buf, message.length(),
@@ -37,7 +36,7 @@ public class ChunkSender extends Thread {
 			server.setTimeToLive(1);
 			server.send(pack);
 			System.out.println("MDR: SENT CHUNK " + chunk.getNo());
-
+			server.close();
 		} catch (IOException e) {
 
 			e.printStackTrace();

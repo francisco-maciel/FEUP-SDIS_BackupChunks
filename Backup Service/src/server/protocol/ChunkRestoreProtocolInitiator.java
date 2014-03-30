@@ -54,7 +54,7 @@ public class ChunkRestoreProtocolInitiator extends Thread {
 			// send all getChunks
 
 			for (int i = 0; i < file.getNumChunks(); i++) {
-				(new GetChunkSender(file.getCryptedName(), i)).start();
+				(new GetChunkSender(file.getCryptedName(), i, false)).start();
 				int once = 0;
 				while (true) {
 					socket.setSoTimeout(500);
@@ -78,8 +78,8 @@ public class ChunkRestoreProtocolInitiator extends Thread {
 								return;
 							} else {
 								once++;
-								(new GetChunkSender(file.getCryptedName(), i))
-										.start();
+								(new GetChunkSender(file.getCryptedName(), i,
+										false)).start();
 
 							}
 						}

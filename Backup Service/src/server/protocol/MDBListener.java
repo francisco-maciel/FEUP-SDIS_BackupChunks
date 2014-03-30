@@ -39,7 +39,6 @@ public class MDBListener extends Thread {
 				try {
 					received = Message.parse(data);
 				} catch (UnrecognizedMessageException e) {
-					System.out.println("Ignored Message");
 				}
 				if (received != null) {
 					System.out.println("MDB: GOT " + received.getType());

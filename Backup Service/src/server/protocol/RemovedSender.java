@@ -29,7 +29,6 @@ public class RemovedSender extends Thread {
 		try {
 			String message = new MessageRemoved(name, no).toMessage();
 
-			@SuppressWarnings("resource")
 			MulticastSocket server = new MulticastSocket();
 			byte buf[] = message.getBytes("ISO-8859-1");
 
@@ -39,7 +38,6 @@ public class RemovedSender extends Thread {
 
 			server.setTimeToLive(1);
 			server.send(pack);
-			System.out.println("1");
 			try {
 				// sleep while protocol may be happening
 				Thread.sleep(500 + 1000 + 2000 + 400);
@@ -68,7 +66,7 @@ public class RemovedSender extends Thread {
 				ChunksRecord.get().updateRecordFile();
 
 			}
-
+			server.close();
 		} catch (IOException e) {
 
 			e.printStackTrace();

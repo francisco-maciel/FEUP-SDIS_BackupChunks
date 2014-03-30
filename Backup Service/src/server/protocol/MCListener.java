@@ -41,13 +41,13 @@ public class MCListener extends Thread {
 				try {
 					received = Message.parse(data);
 				} catch (UnrecognizedMessageException e) {
-					System.out.println("MC: Ignored Message");
 				}
 				if (received != null) {
 					System.out.println("MC : GOT " + received.getType());
-					if (received.getType().equals(MessageType.STORED))
+					if (received.getType().equals(MessageType.STORED)) {
+
 						handleStored(received, pack.getAddress().toString());
-					else if (received.getType().equals(MessageType.GETCHUNK))
+					} else if (received.getType().equals(MessageType.GETCHUNK))
 						handleGetChunk(received, pack.getAddress()
 								.getHostAddress());
 					else if (received.getType().equals(MessageType.DELETE))

@@ -53,10 +53,10 @@ public class ChunkEnhancedRestoreProtocolInitiator extends Thread {
 			// send all getChunks
 
 			for (int i = 0; i < file.getNumChunks(); i++) {
-				(new GetChunkSender(file.getCryptedName(), i)).start();
+				(new GetChunkSender(file.getCryptedName(), i, true)).start();
 				int once = 0;
 				while (true) {
-					socket.setSoTimeout(500);
+					socket.setSoTimeout(700);
 					String data = null;
 					try {
 						data = listenForMessage(socket, pack);
@@ -64,12 +64,12 @@ public class ChunkEnhancedRestoreProtocolInitiator extends Thread {
 						if (e instanceof java.net.SocketTimeoutException) {
 							if (once == 2) {
 								result.set(false);
-
+								socket.close();
 								return;
 							} else {
 								once++;
-								(new GetChunkSender(file.getCryptedName(), i))
-										.start();
+								(new GetChunkSender(file.getCryptedName(), i,
+										true)).start();
 
 							}
 						}
@@ -82,8 +82,9 @@ public class ChunkEnhancedRestoreProtocolInitiator extends Thread {
 					} catch (UnrecognizedMessageException e) {
 					}
 					if (received != null) {
-						System.out.println("MDR: GOT " + received.getType()
-								+ " " + received.getChunkNo());
+						System.out.println("UDP socket: GOT "
+								+ received.getType() + " "
+								+ received.getChunkNo());
 						if (received.getType().equals(MessageType.CHUNK)
 								&& received.getFileId().equals(
 										file.getCryptedName())
@@ -98,6 +99,7 @@ public class ChunkEnhancedRestoreProtocolInitiator extends Thread {
 				l.updateProgressBar(100 * (i + 1) / file.getNumChunks());
 
 			}
+			socket.close();
 			result.set(true);
 			finishSavingFile();
 		} catch (IOException e1) {

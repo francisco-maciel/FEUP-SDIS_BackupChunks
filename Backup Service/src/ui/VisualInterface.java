@@ -327,7 +327,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		slider.setMajorTickSpacing(1);
 		slider.setValue(BackupServer.DEFAULT_REP_VALUE);
 		slider.setMinorTickSpacing(1);
-		slider.setMinimum(0);
+		slider.setMinimum(1);
 		slider.setMaximum(10);
 		slider.setBounds(10, 385, 141, 75);
 		frmBackupService.getContentPane().add(slider);

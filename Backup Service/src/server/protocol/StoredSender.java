@@ -3,6 +3,7 @@ package server.protocol;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
@@ -50,8 +51,8 @@ public class StoredSender extends Thread {
 	@Override
 	public void run() {
 		if (enhance) {
-			int stores = countStoresHeard();
 
+			int stores = countStoresHeard();
 			if (stores >= desiredDegree) {
 				ChunksRecord.get().removeFromChunks(name, no);
 				if (listener != null)
@@ -63,7 +64,6 @@ public class StoredSender extends Thread {
 		try {
 			String message = new MessageStored(name, no).toMessage();
 
-			@SuppressWarnings("resource")
 			MulticastSocket server = new MulticastSocket();
 			byte buf[] = message.getBytes("ISO-8859-1");
 
@@ -73,14 +73,13 @@ public class StoredSender extends Thread {
 
 			server.setTimeToLive(1);
 			server.send(pack);
-
+			server.close();
 		} catch (IOException e) {
 
 			e.printStackTrace();
 		}
 	}
 
-	@SuppressWarnings("resource")
 	private int countStoresHeard() {
 		MulticastSocket s = null;
 		try {
@@ -110,7 +109,6 @@ public class StoredSender extends Thread {
 					s.setSoTimeout(Math.abs(timeout - diff) + 1);
 
 					s.receive(pack);
-
 					data = new String(Arrays.copyOf(pack.getData(),
 							pack.getLength()), "ISO-8859-1");
 
@@ -118,27 +116,33 @@ public class StoredSender extends Thread {
 					e1.printStackTrace();
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
-
-					Message received = null;
-					try {
-						received = Message.parse(data);
-					} catch (UnrecognizedMessageException e1) {
-					}
-					if (received != null) {
-						if (received.getType().equals(MessageType.STORED)
-								&& received.getFileId().equals(name)
-								&& received.getChunkNo() == no) {
-							repplies.add(pack.getAddress().toString());
-						}
-					}
-
-				} catch (java.net.SocketTimeoutException e) {
-					return repplies.size();
 				}
+				Message received = null;
+				try {
+					received = Message.parse(data);
+				} catch (UnrecognizedMessageException e1) {
+				}
+
+				if (received != null) {
+
+					if (received.getType().equals(MessageType.STORED)
+							&& received.getFileId().equals(name)
+							&& received.getChunkNo() == no) {
+						if (!pack
+								.getAddress()
+								.getHostAddress()
+								.equals(Inet4Address.getLocalHost()
+										.getHostAddress()))
+							repplies.add(pack.getAddress().toString());
+					}
+				}
+
+			} catch (java.net.SocketTimeoutException e) {
+				return repplies.size();
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
 
+			}
 		}
 
 	}

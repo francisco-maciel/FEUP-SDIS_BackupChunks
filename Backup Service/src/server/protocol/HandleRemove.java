@@ -70,7 +70,6 @@ public class HandleRemove extends Thread {
 		}
 	}
 
-	@SuppressWarnings("resource")
 	private boolean someoneStartedBackup() {
 		MulticastSocket s = null;
 		try {
@@ -108,24 +107,23 @@ public class HandleRemove extends Thread {
 					e1.printStackTrace();
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
-
-					Message received = null;
-					try {
-						received = Message.parse(data);
-					} catch (UnrecognizedMessageException e1) {
-					}
-					if (received != null) {
-						if (received.getType().equals(MessageType.PUTCHUNK)
-								&& received.getFileId().equals(name)
-								&& received.getChunkNo() == no) {
-							return true;
-
-						}
-					}
-
-				} catch (java.net.SocketTimeoutException e) {
-					return false;
 				}
+				Message received = null;
+				try {
+					received = Message.parse(data);
+				} catch (UnrecognizedMessageException e1) {
+				}
+				if (received != null) {
+					if (received.getType().equals(MessageType.PUTCHUNK)
+							&& received.getFileId().equals(name)
+							&& received.getChunkNo() == no) {
+						return true;
+
+					}
+				}
+
+			} catch (java.net.SocketTimeoutException e) {
+				return false;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

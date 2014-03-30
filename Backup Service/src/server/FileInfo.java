@@ -11,7 +11,6 @@ public class FileInfo implements Serializable {
 	int desiredDegree;
 	public String cryptedName;
 
-	// TODO data modificacao
 	public FileInfo(String name, String path, int size, int desiredDegree,
 			String crypt) {
 		this.name = name;

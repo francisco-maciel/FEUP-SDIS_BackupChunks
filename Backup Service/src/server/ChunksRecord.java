@@ -297,10 +297,8 @@ public class ChunksRecord {
 				Thread t = new RemovedSender(c.getName(), c.getNo(), result);
 				t.start();
 				try {
-					System.out.println("....");
 
 					t.join();
-					System.out.println("..2");
 
 				} catch (InterruptedException e) {
 					e.printStackTrace();

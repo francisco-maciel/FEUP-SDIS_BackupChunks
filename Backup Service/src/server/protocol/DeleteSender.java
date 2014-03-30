@@ -22,7 +22,6 @@ public class DeleteSender extends Thread {
 		try {
 			String message = new MessageDelete(name).toMessage();
 
-			@SuppressWarnings("resource")
 			MulticastSocket server = new MulticastSocket();
 			byte buf[] = message.getBytes("ISO-8859-1");
 
@@ -40,7 +39,7 @@ public class DeleteSender extends Thread {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-
+			server.close();
 		} catch (IOException e) {
 
 			e.printStackTrace();

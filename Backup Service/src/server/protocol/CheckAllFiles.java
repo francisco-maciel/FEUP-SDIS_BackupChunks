@@ -25,7 +25,6 @@ public class CheckAllFiles extends Thread {
 	@Override
 	public void run() {
 		try {
-			@SuppressWarnings("resource")
 			MulticastSocket server = new MulticastSocket();
 			server.setTimeToLive(1);
 
@@ -40,7 +39,7 @@ public class CheckAllFiles extends Thread {
 
 				server.send(pack);
 			}
-
+			server.close();
 		} catch (IOException e) {
 
 			e.printStackTrace();
