@@ -94,4 +94,8 @@ public class Chunk implements Serializable {
 		}
 		return result;
 	}
+
+	public boolean decrementDegree(String origin) {
+		return origins.remove(origin);
+	}
 }

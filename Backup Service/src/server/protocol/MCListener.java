@@ -53,7 +53,7 @@ public class MCListener extends Thread {
 					else if (received.getType().equals(MessageType.ISLOST))
 						handleIsLost(received);
 					else if (received.getType().equals(MessageType.REMOVED))
-						handleRemoved(received);
+						handleRemoved(received, pack.getAddress().toString());
 				}
 
 			}
@@ -65,13 +65,11 @@ public class MCListener extends Thread {
 		// s.close();
 	}
 
-	private void handleRemoved(Message received) {
+	private void handleRemoved(Message received, String origin) {
 		String name = received.getFileId();
 		int no = received.getChunkNo();
+		((new HandleRemove(name, no, origin, bs))).start();
 
-		if (ChunksRecord.get().getChunkIndex(name, no) != -1) {
-
-		}
 	}
 
 	private void handleIsLost(Message received) {
@@ -111,7 +109,6 @@ public class MCListener extends Thread {
 	}
 
 	private void handleDelete(Message received) {
-		System.out.println(received.getFileId());
 		if (ChunksRecord.get().deleteChunksOfFile(received.getFileId())) {
 			java.awt.EventQueue.invokeLater(new Runnable() {
 				public void run() {

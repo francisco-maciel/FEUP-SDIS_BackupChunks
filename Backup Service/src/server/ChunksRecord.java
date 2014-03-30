@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import server.protocol.RemovedSender;
 import ui.BackupListener;
@@ -107,10 +108,8 @@ public class ChunksRecord {
 		}
 	}
 
-	public synchronized boolean addChunk(DataChunk newC) {
-		// TODO if chunk does not exists and ERROR throw exeption. if chunk
-		// exists just return false
-		// update behaviour of MDBputchunk listener accordingly
+	public synchronized boolean addChunk(DataChunk newC, BackupListener l) {
+
 		File f = new File("data" + File.separator + "chunks" + File.separator
 				+ newC.getChunkFileName());
 		try {
@@ -219,7 +218,7 @@ public class ChunksRecord {
 		}
 	}
 
-	public synchronized Vector<Chunk> getChunks() {
+	public Vector<Chunk> getChunks() {
 		return chunks;
 	}
 
@@ -240,7 +239,7 @@ public class ChunksRecord {
 		return false;
 	}
 
-	public synchronized int getChunkIndex(String fileId, int chunkNo) {
+	public int getChunkIndex(String fileId, int chunkNo) {
 		for (int i = 0; i < chunks.size(); i++) {
 			if (chunks.get(i).chunkNo == chunkNo
 					&& chunks.get(i).getName().equals(fileId))
@@ -262,17 +261,18 @@ public class ChunksRecord {
 		this.max_size = ans;
 		updateRecordFile();
 		if (max_size < total_size)
-			spaceReclaim(total_size - max_size, l);
+			spaceReclaim(total_size - max_size, l, false);
 	}
 
-	private void spaceReclaim(int spaceNeeded, BackupListener l) {
+	private boolean spaceReclaim(int spaceNeeded, BackupListener listener, boolean sync) {
 
 		// puts ideal chunks to remove on start of array
 		orderChunksByRemoveOrder();
-
+		boolean returnv = true;
 		int space_removed = 0;
 		int i = 0;
 		Vector<Chunk> chunks_to_remove = new Vector<Chunk>();
+
 		while (space_removed < spaceNeeded) {
 			space_removed += chunks.get(i).getSize();
 			chunks_to_remove.add(chunks.get(i));
@@ -281,21 +281,41 @@ public class ChunksRecord {
 
 		remove_list.addAll(chunks_to_remove);
 
+		int x = 0;
 		for (Chunk c : chunks_to_remove) {
-			(new RemovedSender(c.getName(), c.getNo(), l)).start();
-		}
-		// TODO para cada chunk_to_remove
-		// se rep > actual degree comecar protocolo remove
-		// ao termanar remover da removed_list
+			x++;
+			if (x % 5 == 0)
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			AtomicBoolean result = new AtomicBoolean(true);
 
-		// senao
-		// TODO começar protocolo removed 2
-		// para cada chunk. se protocolo putchunk nao retornar stores
-		// suficientes
-		// nao remover e mandar stored e retirar da remove_list
-		//
-		// se nao houver protocolo putchunk ou storeds >= desireddegree remover
-		// a chunk e retirar da remover da removed_list
+			if (sync) {
+
+				Thread t = new RemovedSender(c.getName(), c.getNo(), result);
+				t.start();
+				try {
+					System.out.println("....");
+
+					t.join();
+					System.out.println("..2");
+
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				returnv = returnv && result.get();
+				listener.updateChunks(ChunksRecord.get().getChunks());
+
+			} else {
+				(new RemovedSender(c.getName(), c.getNo(), result)).start();
+				listener.updateChunks(ChunksRecord.get().getChunks());
+			}
+
+		}
+		return returnv;
+
 	}
 
 	private void orderChunksByRemoveOrder() {
@@ -339,6 +359,35 @@ public class ChunksRecord {
 			if (remove_list.get(i).getName().equals(name)
 					&& remove_list.get(i).getNo() == no)
 				remove_list.remove(i);
+
+		}
+	}
+
+	public boolean decrementChunkValue(String fileId, String origin, int chunkNo) {
+		try {
+			int index = getChunkIndex(fileId, chunkNo);
+			if (index != -1) {
+
+				if (chunks.get(index).decrementDegree(origin)) {
+					updateRecordFile();
+					if (chunks.get(index).getActualDegree() < chunks.get(index).desiredDegree)
+						return true;
+					else
+						return false;
+				}
+				return false;
+			}
+		} catch (Exception e) {
+			return false;
+		}
+		return false;
+	}
+
+	public void removeFromChunks(String name, int no) {
+		for (int i = 0; i < chunks.size(); i++) {
+			if (chunks.get(i).getName().equals(name)
+					&& chunks.get(i).getNo() == no)
+				chunks.remove(i);
 
 		}
 	}

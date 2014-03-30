@@ -8,85 +8,75 @@ import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.JOptionPane;
 
 import server.BackupServer;
+import server.Chunk;
 import server.ChunksRecord;
+import server.DataChunk;
 import server.messages.Message;
-import server.messages.MessageStored;
 import server.messages.MessageType;
 import server.messages.UnrecognizedMessageException;
-import ui.BackupListener;
 
-public class StoredSender extends Thread {
-
+public class HandleRemove extends Thread {
 	String name;
 	int no;
-	boolean enhance;
-	int desiredDegree;
-	BackupListener listener;
-	HashSet<String> repplies;
+	String origin;
+	BackupServer bs;
 
-	public StoredSender(String name, int no, boolean enhance,
-			int desiredDegree, BackupListener l) {
+	public HandleRemove(String name, int no, String origin, BackupServer bs) {
 		this.name = name;
 		this.no = no;
-		this.enhance = enhance;
-		this.desiredDegree = desiredDegree;
-		this.listener = l;
-		repplies = new HashSet<String>();
-
-	}
-
-	public StoredSender(String name, int no, boolean enhance, int desiredDegree) {
-		this.name = name;
-		this.no = no;
-		this.enhance = enhance;
-		this.desiredDegree = desiredDegree;
-		this.listener = null;
+		this.origin = origin;
+		this.bs = bs;
 	}
 
 	@Override
 	public void run() {
-		if (enhance) {
-			int stores = countStoresHeard();
 
-			if (stores >= desiredDegree) {
-				ChunksRecord.get().removeFromChunks(name, no);
-				if (listener != null)
-					listener.updateChunks(ChunksRecord.get().getChunks());
-				return;
+		if (ChunksRecord.get().getChunkIndex(name, no) != -1) {
+			if (ChunksRecord.get().decrementChunkValue(name, origin, no)) {
+
+				if (someoneStartedBackup())
+					return;
+				AtomicBoolean result = new AtomicBoolean(false);
+				int index = ChunksRecord.get().getChunkIndex(name, no);
+				Chunk c = bs.getRecord().getChunks().get(index);
+				DataChunk dc = c.getDataChunk();
+
+				Thread t = new BackupChunk(dc, c.desiredDegree, result);
+				t.start();
+				try {
+					t.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				if (result.get() == false) {
+					JOptionPane.showMessageDialog(null,
+							"Warning! Some data may have been compromised!",
+							"Warning", JOptionPane.WARNING_MESSAGE);
+				}
+
+				java.awt.EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						bs.updateVisuals();
+					}
+				});
 			}
-		}
-
-		try {
-			String message = new MessageStored(name, no).toMessage();
-
-			@SuppressWarnings("resource")
-			MulticastSocket server = new MulticastSocket();
-			byte buf[] = message.getBytes("ISO-8859-1");
-
-			DatagramPacket pack = new DatagramPacket(buf, message.length(),
-					InetAddress.getByName(BackupServer.mc_address),
-					BackupServer.mc_port);
-
-			server.setTimeToLive(1);
-			server.send(pack);
-
-		} catch (IOException e) {
-
-			e.printStackTrace();
 		}
 	}
 
 	@SuppressWarnings("resource")
-	private int countStoresHeard() {
+	private boolean someoneStartedBackup() {
 		MulticastSocket s = null;
 		try {
-			s = new MulticastSocket(BackupServer.mc_port);
+			s = new MulticastSocket(BackupServer.mdb_port);
 
-			s.joinGroup(InetAddress.getByName(BackupServer.mc_address));
+			s.joinGroup(InetAddress.getByName(BackupServer.mdb_address));
 		} catch (UnknownHostException e2) {
 			e2.printStackTrace();
 		} catch (IOException e2) {
@@ -98,7 +88,7 @@ public class StoredSender extends Thread {
 
 		Random rand = new Random();
 
-		int timeout = rand.nextInt(400 + 2) + 1;
+		int timeout = rand.nextInt(400 + 1) + 1;
 		long oldTime = (new java.util.Date()).getTime();
 
 		while (true) {
@@ -125,15 +115,16 @@ public class StoredSender extends Thread {
 					} catch (UnrecognizedMessageException e1) {
 					}
 					if (received != null) {
-						if (received.getType().equals(MessageType.STORED)
+						if (received.getType().equals(MessageType.PUTCHUNK)
 								&& received.getFileId().equals(name)
 								&& received.getChunkNo() == no) {
-							repplies.add(pack.getAddress().toString());
+							return true;
+
 						}
 					}
 
 				} catch (java.net.SocketTimeoutException e) {
-					return repplies.size();
+					return false;
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

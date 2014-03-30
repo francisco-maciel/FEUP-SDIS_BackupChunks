@@ -36,8 +36,6 @@ public class DeleteSender extends Thread {
 				server.send(pack);
 				Thread.sleep(1000);
 				server.send(pack);
-				Thread.sleep(1000);
-				server.send(pack);
 
 			} catch (InterruptedException e) {
 				e.printStackTrace();

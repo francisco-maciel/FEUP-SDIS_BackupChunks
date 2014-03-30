@@ -4,26 +4,27 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import server.BackupServer;
 import server.Chunk;
 import server.ChunksRecord;
 import server.messages.MessageRemoved;
-import ui.BackupListener;
 
 public class RemovedSender extends Thread {
 	String name;
 	int no;
-	BackupListener listener;
+	AtomicBoolean result;
 
-	public RemovedSender(String name, int no, BackupListener l) {
+	public RemovedSender(String name, int no, AtomicBoolean result) {
 		this.name = name;
 		this.no = no;
-		listener = l;
+		this.result = result;
 	}
 
 	@Override
 	public void run() {
+
 		(new RandomSleep(400)).go();
 		try {
 			String message = new MessageRemoved(name, no).toMessage();
@@ -38,24 +39,34 @@ public class RemovedSender extends Thread {
 
 			server.setTimeToLive(1);
 			server.send(pack);
+			System.out.println("1");
 			try {
 				// sleep while protocol may be happening
 				Thread.sleep(500 + 1000 + 2000 + 400);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+
 			int index = ChunksRecord.get().getChunkIndex(name, no);
+
 			Chunk c = ChunksRecord.get().getChunks().get(index);
-			if ((c.getActualDegree() - 1) < c.desiredDegree) {
+
+			if (c.getActualDegree() < c.desiredDegree) {
+				result.set(false);
 				ChunksRecord.get().removeFromRemoveList(c.getName(), c.getNo());
-				(new Thread(new StoredSender(c.getName(), c.getNo()))).start();
+
+				(new Thread(new StoredSender(c.getName(), c.getNo(), false,
+						c.desiredDegree))).start();
+
 			} else {
+				result.set(true);
 				ChunksRecord.get().removeFromRemoveList(c.getName(), c.getNo());
 				ChunksRecord.get().getChunks().remove(index);
 				ChunksRecord.get().deleteChunk(c);
+
 				ChunksRecord.get().updateTotalSize();
 				ChunksRecord.get().updateRecordFile();
-				listener.updateChunks(ChunksRecord.get().getChunks());
+
 			}
 
 		} catch (IOException e) {

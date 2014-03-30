@@ -172,16 +172,24 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		backupButton = new JButton("Add file");
 		backupButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				final JFileChooser fc = new JFileChooser();
-				int returnVal = fc.showOpenDialog(frmBackupService);
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					File file = fc.getSelectedFile();
-					server.backupFile(file, new Integer(
-							VisualInterface.this.degreeField.getText()));
-					VisualInterface.this.clearDetailedText();
-					restoreButton.setEnabled(enableButtons);
-					deleteButton.setEnabled(enableButtons);
-				}
+				(new Thread(new Runnable() {
+
+					@Override
+					public void run() {
+						final JFileChooser fc = new JFileChooser();
+						int returnVal = fc.showOpenDialog(frmBackupService);
+						if (returnVal == JFileChooser.APPROVE_OPTION) {
+							File file = fc.getSelectedFile();
+							server.backupFile(file, new Integer(
+									VisualInterface.this.degreeField.getText()));
+							VisualInterface.this.clearDetailedText();
+							restoreButton.setEnabled(enableButtons);
+							deleteButton.setEnabled(enableButtons);
+						}
+
+					}
+
+				})).start();
 			}
 		});
 		backupButton.setBounds(10, 331, 89, 23);
@@ -425,9 +433,9 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		JButton btnNewButton = new JButton("Alter");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				int ans = 0;
+				double ans = 0;
 				try {
-					ans = Integer.parseInt((String) JOptionPane
+					ans = Double.parseDouble((String) JOptionPane
 							.showInputDialog(null, "Set max size (in 64k)",
 									"Change max size",
 									JOptionPane.INFORMATION_MESSAGE, null,
@@ -436,7 +444,7 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 
 					return;
 				}
-				ChunksRecord.get().setMaxSize(ans * 64 * 1000,
+				ChunksRecord.get().setMaxSize((int) (ans * 64 * 1000),
 						VisualInterface.this);
 				updateChunks(ChunksRecord.get().getChunks());
 			}

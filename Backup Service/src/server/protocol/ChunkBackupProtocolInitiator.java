@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JOptionPane;
 
 import server.ChunkedFile;
+import server.ChunksRecord;
 import server.FileInfo;
 import server.FilesRecord;
 import ui.BackupListener;
@@ -98,7 +99,7 @@ public class ChunkBackupProtocolInitiator extends Thread {
 			JOptionPane.showMessageDialog(null, "The file " + file.fileName
 					+ " failed to backup correctly", "File backup failed",
 					JOptionPane.WARNING_MESSAGE);
-
+			listener.updateChunks(ChunksRecord.get().getChunks());
 			System.out.println("FILE BACKUP FAILED");
 
 		}

@@ -63,23 +63,35 @@ public class MDBListener extends Thread {
 		return data;
 	}
 
-	private void handlePutChunk(Message received) {
-		MessagePutChunk mpc = (MessagePutChunk) received;
-		DataChunk dc = new DataChunk(mpc.getFileId(), mpc.getChunkNo(),
+	private void handlePutChunk(final Message received) {
+		final MessagePutChunk mpc = (MessagePutChunk) received;
+		final DataChunk dc = new DataChunk(mpc.getFileId(), mpc.getChunkNo(),
 				mpc.getBody(), mpc.getBody().length);
 		dc.desiredDegree = mpc.getDegree();
-		boolean stored = bs.getRecord().addChunk(dc);
-		if (stored) {
-			java.awt.EventQueue.invokeLater(new Runnable() {
-				public void run() {
-					bs.updateVisuals();
+
+		(new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+
+				boolean stored = bs.getRecord().addChunk(dc, bs.getListener());
+				if (stored) {
+					java.awt.EventQueue.invokeLater(new Runnable() {
+						public void run() {
+							bs.updateVisuals();
+						}
+					});
 				}
-			});
-		}
-		if (!bs.getRecord().onRemovedList(mpc.getFileId(), mpc.getChunkNo())) {
-			(new Thread(new StoredSender(received.getFileId(),
-					received.getChunkNo()))).start();
-		}
+				if (!bs.getRecord().onRemovedList(mpc.getFileId(),
+						mpc.getChunkNo())) {
+
+					(new Thread(new StoredSender(received.getFileId(),
+							received.getChunkNo(), true, mpc.getDegree(),
+							bs.getListener()))).start();
+				}
+
+			}
+		})).start();
 
 	}
 }
