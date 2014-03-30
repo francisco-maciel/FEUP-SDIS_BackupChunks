@@ -76,9 +76,10 @@ public class MDBListener extends Thread {
 				}
 			});
 		}
-
-		(new Thread(new StoredSender(received.getFileId(),
-				received.getChunkNo()))).start();
+		if (!bs.getRecord().onRemovedList(mpc.getFileId(), mpc.getChunkNo())) {
+			(new Thread(new StoredSender(received.getFileId(),
+					received.getChunkNo()))).start();
+		}
 
 	}
 }

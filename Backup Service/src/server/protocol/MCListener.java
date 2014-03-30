@@ -52,6 +52,8 @@ public class MCListener extends Thread {
 						handleDelete(received);
 					else if (received.getType().equals(MessageType.ISLOST))
 						handleIsLost(received);
+					else if (received.getType().equals(MessageType.REMOVED))
+						handleRemoved(received);
 				}
 
 			}
@@ -61,6 +63,15 @@ public class MCListener extends Thread {
 		}
 		// s.leaveGroup(InetAddress.getByName(BackupServer.mc_address));
 		// s.close();
+	}
+
+	private void handleRemoved(Message received) {
+		String name = received.getFileId();
+		int no = received.getChunkNo();
+
+		if (ChunksRecord.get().getChunkIndex(name, no) != -1) {
+
+		}
 	}
 
 	private void handleIsLost(Message received) {

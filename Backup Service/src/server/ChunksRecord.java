@@ -12,8 +12,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Vector;
 
+import server.protocol.RemovedSender;
+import ui.BackupListener;
 import utils.Debug;
 
 public class ChunksRecord {
@@ -22,6 +26,7 @@ public class ChunksRecord {
 	private static ChunksRecord chuncksRecord;
 
 	private Vector<Chunk> chunks;
+	private Vector<Chunk> remove_list;
 	private Integer max_size;
 	private int total_size;
 	Vector<String> deletedFiles;
@@ -30,7 +35,7 @@ public class ChunksRecord {
 	private ChunksRecord() {
 
 		createDataFolder();
-
+		remove_list = new Vector<Chunk>();
 		File f = new File("data" + File.separator + RECORD_NAME);
 		if (f.exists() && !f.isDirectory()) {
 			try {
@@ -59,7 +64,11 @@ public class ChunksRecord {
 
 	}
 
-	private int countTotalSize() {
+	public void updateTotalSize() {
+		total_size = countTotalSize();
+	}
+
+	public int countTotalSize() {
 		int total = 0;
 		for (Chunk c : chunks) {
 			total += c.getSize();
@@ -122,6 +131,8 @@ public class ChunksRecord {
 		c.desiredDegree = newC.desiredDegree;
 
 		chunks.add(c);
+		deletedFiles.remove(c.getName());
+
 		total_size = countTotalSize();
 
 		updateRecordFile();
@@ -151,23 +162,24 @@ public class ChunksRecord {
 
 	public synchronized boolean deleteChunksOfFile(String fileId) {
 
+		boolean found = false;
 		try {
 			for (int i = 0; i < chunks.size(); i++) {
 				if (chunks.get(i).getName().equals(fileId)) {
 					// DELETE CHUNK
 					deleteChunk(chunks.get(i));
 					chunks.remove(i);
-
+					found = true;
 					i--;
 				}
 			}
 			total_size = countTotalSize();
 			deletedFiles.add(fileId);
 			updateRecordFile();
-			return true;
+			return found;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return false;
+			return found;
 		}
 
 	}
@@ -190,7 +202,7 @@ public class ChunksRecord {
 		return (directory.delete());
 	}
 
-	private void updateRecordFile() {
+	public void updateRecordFile() {
 		try {
 			File f = new File("data" + File.separator + RECORD_NAME);
 			f.createNewFile();
@@ -246,13 +258,88 @@ public class ChunksRecord {
 		return total_size;
 	}
 
-	public void setMaxSize(int ans) {
+	public void setMaxSize(int ans, BackupListener l) {
 		this.max_size = ans;
 		updateRecordFile();
+		if (max_size < total_size)
+			spaceReclaim(total_size - max_size, l);
+	}
+
+	private void spaceReclaim(int spaceNeeded, BackupListener l) {
+
+		// puts ideal chunks to remove on start of array
+		orderChunksByRemoveOrder();
+
+		int space_removed = 0;
+		int i = 0;
+		Vector<Chunk> chunks_to_remove = new Vector<Chunk>();
+		while (space_removed < spaceNeeded) {
+			space_removed += chunks.get(i).getSize();
+			chunks_to_remove.add(chunks.get(i));
+			i++;
+		}
+
+		remove_list.addAll(chunks_to_remove);
+
+		for (Chunk c : chunks_to_remove) {
+			(new RemovedSender(c.getName(), c.getNo(), l)).start();
+		}
+		// TODO para cada chunk_to_remove
+		// se rep > actual degree comecar protocolo remove
+		// ao termanar remover da removed_list
+
+		// senao
+		// TODO começar protocolo removed 2
+		// para cada chunk. se protocolo putchunk nao retornar stores
+		// suficientes
+		// nao remover e mandar stored e retirar da remove_list
+		//
+		// se nao houver protocolo putchunk ou storeds >= desireddegree remover
+		// a chunk e retirar da remover da removed_list
+	}
+
+	private void orderChunksByRemoveOrder() {
+		Collections.sort(chunks, new Comparator<Chunk>() {
+			@Override
+			public int compare(Chunk o2, Chunk o1) {
+
+				int deg_comp = (new Integer(o1.getActualDegree()
+						- o1.desiredDegree)).compareTo(new Integer((o2
+						.getActualDegree() - o2.desiredDegree)));
+				if (deg_comp != 0)
+					return deg_comp;
+				else
+					return (new Integer(o1.getSize())).compareTo(new Integer(
+							(o2.getSize())));
+
+			}
+
+		});
 	}
 
 	public boolean wasDeleted(String name) {
 		return deletedFiles.contains((String) name);
 	}
 
+	public void setNotDeleted(String cryptedName) {
+		deletedFiles.remove(cryptedName);
+	}
+
+	public boolean onRemovedList(String fileId, int chunkNo) {
+		for (Chunk c : remove_list) {
+			if (c.getName().equals(fileId) && chunkNo == c.getNo()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void removeFromRemoveList(String name, int no) {
+		for (int i = 0; i < remove_list.size(); i++) {
+			if (remove_list.get(i).getName().equals(name)
+					&& remove_list.get(i).getNo() == no)
+				remove_list.remove(i);
+
+		}
+	}
 }

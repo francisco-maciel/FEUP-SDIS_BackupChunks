@@ -93,8 +93,10 @@ public class FilesRecord {
 				f.setSize(size);
 			}
 		}
-		if (!found)
+		if (!found) {
 			files.add(newFile);
+			ChunksRecord.get().setNotDeleted(newFile.getCryptedName());
+		}
 
 		updateRecordFile();
 		return true;
