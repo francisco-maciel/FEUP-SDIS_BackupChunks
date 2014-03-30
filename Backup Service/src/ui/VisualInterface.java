@@ -670,7 +670,6 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 
 	@Override
 	public void setEnabledButtons(boolean value) {
-		restoreButton.setEnabled(value);
 		deleteButton.setEnabled(false);
 		backupButton.setEnabled(value);
 		enableButtons = value;

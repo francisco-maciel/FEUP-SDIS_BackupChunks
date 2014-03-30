@@ -136,13 +136,11 @@ public class BackupServer {
 				}
 
 				if (result.get() == false) {
-					System.out.println("udp fail");
 
 					ChunkRestoreProtocolInitiator restore = new ChunkRestoreProtocolInitiator(
 							file, listener);
 					new Thread(restore).start();
 				} else {
-					System.out.println("udp success");
 				}
 				listener.setEnabledButtons(true);
 
