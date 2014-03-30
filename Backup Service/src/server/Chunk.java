@@ -84,7 +84,11 @@ public class Chunk implements Serializable {
 
 				byte[] data = new byte[64000];
 				int read = file.read(data);
-				byte[] body = Arrays.copyOf(data, read);
+				byte[] body;
+				if (read >= 0)
+					body = Arrays.copyOf(data, read);
+				else
+					body = new byte[0];
 				file.close();
 				result = new DataChunk(fileId, chunkNo, body, read);
 			} catch (IOException e) {
