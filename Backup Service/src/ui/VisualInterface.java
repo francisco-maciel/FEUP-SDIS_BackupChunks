@@ -195,16 +195,6 @@ public class VisualInterface implements BackupListener, TreeSelectionListener {
 		backupButton.setBounds(10, 331, 89, 23);
 		frmBackupService.getContentPane().add(backupButton);
 
-		JButton btnDeleteAllChunks = new JButton("Delete All Chunks");
-		btnDeleteAllChunks.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				server.deleteData();
-
-			}
-		});
-		btnDeleteAllChunks.setBounds(535, 331, 124, 23);
-		frmBackupService.getContentPane().add(btnDeleteAllChunks);
-
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(null, "Detailed File Info",
 				TitledBorder.LEADING, TitledBorder.TOP, null, null));
