@@ -294,7 +294,8 @@ public class ChunksRecord {
 
 			if (sync) {
 
-				Thread t = new RemovedSender(c.getName(), c.getNo(), result);
+				Thread t = new RemovedSender(c.getName(), c.getNo(), result,
+						listener);
 				t.start();
 				try {
 
@@ -307,8 +308,8 @@ public class ChunksRecord {
 				listener.updateChunks(ChunksRecord.get().getChunks());
 
 			} else {
-				(new RemovedSender(c.getName(), c.getNo(), result)).start();
-				listener.updateChunks(ChunksRecord.get().getChunks());
+				(new RemovedSender(c.getName(), c.getNo(), result, listener))
+						.start();
 			}
 
 		}

@@ -99,6 +99,8 @@ public class ChunkBackupProtocolInitiator extends Thread {
 			FilesRecord.get().deleteFile(file.fileName);
 			(new DeleteSender(file.getCryptName())).start();
 			listener.updateProgressBar(0);
+			for (int i = 0; i < file.getNChunks(); i++)
+				PutChunkEnhancement.destroy(file.getChunk(i));
 
 			JOptionPane.showMessageDialog(null, "The file " + file.fileName
 					+ " failed to backup correctly", "File backup failed",

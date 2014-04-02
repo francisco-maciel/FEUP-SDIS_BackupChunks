@@ -10,16 +10,20 @@ import server.BackupServer;
 import server.Chunk;
 import server.ChunksRecord;
 import server.messages.MessageRemoved;
+import ui.BackupListener;
 
 public class RemovedSender extends Thread {
 	String name;
 	int no;
 	AtomicBoolean result;
+	BackupListener listener;
 
-	public RemovedSender(String name, int no, AtomicBoolean result) {
+	public RemovedSender(String name, int no, AtomicBoolean result,
+			BackupListener l) {
 		this.name = name;
 		this.no = no;
 		this.result = result;
+		this.listener = l;
 	}
 
 	@Override
@@ -64,7 +68,7 @@ public class RemovedSender extends Thread {
 
 				ChunksRecord.get().updateTotalSize();
 				ChunksRecord.get().updateRecordFile();
-
+				listener.updateChunks(ChunksRecord.get().getChunks());
 			}
 			server.close();
 		} catch (IOException e) {
